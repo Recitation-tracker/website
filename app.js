@@ -9,12 +9,14 @@ const uid = () => (crypto.randomUUID ? crypto.randomUUID() : "id-" + Date.now() 
 const initials = (name="") => name.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0].toUpperCase()).join("") || "?";
 const escapeHTML = (s="") => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const demoNames = ["Maria Santos","Sofia Garcia","Juan Dela Cruz","Pedro Lim","Ana Reyes","Miguel Cruz","Angela Mendoza","Carlo Rivera","Bea Flores","Mark Villanueva","Liza Ramos","Daniel Torres","Ella Castillo","Paolo Navarro","Nina Bautista","Rafael Gomez","Kimberly Diaz","Joshua Fernandez","Patricia Lopez","Gabriel Aquino","Trisha Mercado","Nathaniel Perez","Jasmine Tan","Christian David","Andrea Silva","Lorenzo Castro","Mikaela Robles","Adrian Santiago","Camille Valdez","Francis Yu","Leah Cabrera","Enzo Morales","Bianca Herrera","Noah Aguilar","Samantha Ortiz"];
+const ROSTER = ["CATIGMOT, JAMES KEVIN D.","DAVID, JHAN ALLEN N.","DECIN, RENZ JOHN T.","ENORE, JOHN KERBY A.","FAJILAGOT, RHYNJAY D.","FILLARCA, JOHN GABRIEL","FERNANDEZ, ALEXANDER G.","GALANG, KIAN VINCE M.","GALICIA, IVAN KHURL T.","GALICIA, MAYNARD G.","MERANO, FEDIE B.","MESANA, CJ E.","SIA, CHRIS JOHN M.","TAMAYO, RON ALLEN G.","VENERACION, KEVIN LAWRENZ"];
+function rosterClass(){return {id:"class-roster",name:"Grade 11 – Class List",subject:"General Mathematics",grade:"Grade 11",students:ROSTER.map((name,i)=>({id:uid(),name,seat:i+1,group:i%4+1}))};}
 function makeDemo(){
   const students = demoNames.map((name,i)=>({id:uid(),name,seat:i+1,group:i%4+1}));
   return {
     settings:{teacher:"Teacher",school:"Alcantara National High School"},
-    classes:[{id:"class-1",name:"Grade 11 – Sampaguita",subject:"General Mathematics",grade:"Grade 11",students}],
-    activeClassId:"class-1",attendance:[],records:[],
+    classes:[{id:"class-1",name:"Grade 11 – Sampaguita",subject:"General Mathematics",grade:"Grade 11",students},rosterClass()],
+    activeClassId:"class-roster",attendance:[],records:[],
     groups:[{id:1,name:"Magigiting",points:85},{id:2,name:"Masipag",points:92},{id:3,name:"Matatag",points:78},{id:4,name:"Masinop",points:88}]
   };
 }
@@ -43,13 +45,84 @@ function renderDashboard(){
   $("recentActivity").innerHTML=recent.map(r=>{const s=list.find(x=>x.id===r.studentId);return `<div class="activity-item"><span class="activity-dot"></span><div><strong>${escapeHTML(s?.name||"Former student")} · ${r.result} (${r.score}/10)</strong><small>${new Date(r.createdAt).toLocaleString()}</small></div></div>`}).join("")||`<div class="empty-state">No recitation records yet. Start a session to see activity here.</div>`;
 }
 function renderClasses(){ $("classGrid").innerHTML=data.classes.map(c=>`<article class="class-card ${c.id===data.activeClassId?"active-class":""}"><span class="pill ${c.id===data.activeClassId?"green":"gray"}">${c.id===data.activeClassId?"Active class":"Available class"}</span><h3>${escapeHTML(c.name)}</h3><p>${escapeHTML(c.subject||"Subject not set")}</p><div class="class-meta"><span>♙ ${c.students.length} students</span><span>${escapeHTML(c.grade||"")}</span></div><button class="btn btn-primary" data-class-select="${c.id}">Open Class</button><button class="btn btn-outline" data-class-edit="${c.id}">Edit</button></article>`).join("")||`<div class="empty-state">No classes yet.</div>`;}
+/* ---------- Attendance grid (spreadsheet style) ---------- */
+const ATT_STATUS={P:"Present",A:"Absent",L:"Late",E:"Excused"};
+const ATT_CODE={Present:"P",Absent:"A",Late:"L",Excused:"E"};
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DAYLET={1:"M",2:"T",3:"W",4:"Th",5:"F"};
+let attMonth=todayISO().slice(0,7), attTarget=null;
+function noClassDates(){const id=activeClass()?.id;if(!data.noClass)data.noClass={};return data.noClass[id]||(data.noClass[id]=[]);}
+function monthDays(ym){const [y,m]=ym.split("-").map(Number);const out=[];const n=new Date(y,m,0).getDate();for(let d=1;d<=n;d++){const dow=new Date(y,m-1,d).getDay();if(dow>=1&&dow<=5)out.push({date:ym+"-"+String(d).padStart(2,"0"),dow,day:d});}return out;}
+function attMap(){const id=activeClass()?.id;const m=new Map();data.attendance.forEach(a=>{if(a.classId===id)m.set(a.studentId+"|"+a.date,a);});return m;}
+function studentTotals(s,days,off,map){const t={P:0,A:0,L:0,E:0};days.forEach(d=>{if(off.has(d.date))return;const r=map.get(s.id+"|"+d.date);if(r&&ATT_CODE[r.status])t[ATT_CODE[r.status]]++;});const marked=t.P+t.A+t.L+t.E;t.rate=marked?Math.round((t.P+t.L)/marked*100):null;return t;}
+function cellAt(r,c){return document.querySelector(`#attendanceTable .att-cell[data-r="${r}"][data-c="${c}"]`);}
 function renderAttendance(){
-  populateClassSelects();$("attendanceDate").value=$("attendanceDate").value||todayISO();const date=$("attendanceDate").value;const cls=activeClass();const existing=data.attendance.filter(a=>a.classId===cls.id&&a.date===date);selectedAttendance={};cls.students.forEach(s=>{const old=existing.find(a=>a.studentId===s.id);selectedAttendance[s.id]={status:old?.status||"Present",note:old?.note||""};});
-  $("attendanceBody").innerHTML=cls.students.map(s=>`<tr><td><div class="student-cell"><span class="student-avatar">${initials(s.name)}</span>${escapeHTML(s.name)}</div></td><td>${s.seat}</td><td><select class="select-control attendance-status" data-att-status="${s.id}">${["Present","Absent","Late","Excused"].map(v=>`<option ${selectedAttendance[s.id].status===v?"selected":""}>${v}</option>`).join("")}</select></td><td><input class="input-control" data-att-note="${s.id}" placeholder="Optional note" value="${escapeHTML(selectedAttendance[s.id].note)}"></td></tr>`).join("");
-  updateAttendanceCount();
+  populateClassSelects();const cls=activeClass();if(!cls)return;
+  $("attendanceMonth").value=attMonth;
+  const wrap=$("attendanceGrid"),sl=wrap.scrollLeft,st=wrap.scrollTop;
+  const days=monthDays(attMonth),weeks=[];
+  days.forEach(d=>{let w=weeks[weeks.length-1];if(!w||d.dow===1){w={days:[]};weeks.push(w);}w.days.push(d);});
+  const off=new Set(noClassDates()),map=attMap(),list=cls.students.slice().sort((a,b)=>(a.seat||0)-(b.seat||0));
+  const mon=MONTHS[+attMonth.slice(5,7)-1];
+  const startCol=new Set(weeks.map(w=>w.days[0].date));
+  let h1=`<th rowspan="3" class="c-no">No.</th><th rowspan="3" class="c-name">LEARNER'S NAME</th>`;
+  weeks.forEach((w,i)=>{const a=w.days[0].day,b=w.days[w.days.length-1].day;h1+=`<th colspan="${w.days.length}" class="wk-start">${w.days.length<3?"Wk "+(i+1):"Week "+(i+1)+" · "+mon+" "+a+(b!==a?"–"+b:"")}</th>`;});
+  h1+=`<th colspan="5" class="wk-start">Monthly Summary</th>`;
+  let h2="",h3="";
+  days.forEach(d=>{const ws=startCol.has(d.date)?" wk-start":"";h2+=`<th class="${ws.trim()}">${DAYLET[d.dow]}</th>`;h3+=`<th class="dayhead${ws}${off.has(d.date)?" off":""}" data-date="${d.date}" title="Column options">${d.day}</th>`;});
+  const sums=["P","A","L","E","Rate"];
+  h2+=sums.map((x,i)=>`<th rowspan="2" class="${i===0?"wk-start":""}">${x}</th>`).join("");
+  let body="";
+  list.forEach((s,r)=>{
+    body+=`<tr><td class="c-no">${r+1}</td><td class="c-name" title="${escapeHTML(s.name)}">${escapeHTML(s.name)}</td>`;
+    days.forEach((d,c)=>{const ws=startCol.has(d.date)?" wk-start":"";
+      if(off.has(d.date)){body+=`<td class="att-cell off${ws}" data-r="${r}" data-c="${c}" data-off="1"></td>`;return;}
+      const rec=map.get(s.id+"|"+d.date),code=rec?ATT_CODE[rec.status]:"";
+      body+=`<td class="att-cell${code?" st-"+code:""}${ws}" tabindex="-1" data-r="${r}" data-c="${c}" data-s="${s.id}" data-d="${d.date}">${code}</td>`;});
+    const t=studentTotals(s,days,off,map);
+    body+=`<td class="sum-cell wk-start">${t.P||""}</td><td class="sum-cell">${t.A||""}</td><td class="sum-cell">${t.L||""}</td><td class="sum-cell">${t.E||""}</td><td class="sum-cell">${t.rate===null?"":t.rate+"%"}</td></tr>`;
+  });
+  if(!list.length)body=`<tr><td colspan="${days.length+7}" class="empty-state">No students in this class yet. Add them under Students.</td></tr>`;
+  let foot="";
+  [["PRESENT",s=>s==="P"||s==="L"],["ABSENT",s=>s==="A"]].forEach(([label,test])=>{
+    foot+=`<tr class="att-total"><td class="c-no"></td><td class="c-name">${label}</td>`;
+    days.forEach(d=>{const ws=startCol.has(d.date)?" wk-start":"";if(off.has(d.date)){foot+=`<td class="${ws.trim()}"></td>`;return;}
+      let n=0,any=false;list.forEach(s=>{const rec=map.get(s.id+"|"+d.date);if(rec){any=true;if(test(ATT_CODE[rec.status]))n++;}});foot+=`<td class="${ws.trim()}">${any?n:""}</td>`;});
+    foot+=`<td colspan="5" class="wk-start"></td></tr>`;
+  });
+  $("attendanceTable").innerHTML=`<thead><tr>${h1}</tr><tr>${h2}</tr><tr>${h3}</tr></thead><tbody>${body}</tbody>${list.length?`<tfoot>${foot}</tfoot>`:""}`;
+  const first=document.querySelector("#attendanceTable .att-cell:not([data-off])");if(first)first.tabIndex=0;
+  wrap.scrollLeft=sl;wrap.scrollTop=st;
+  $("attendanceCount").textContent=`${list.length} learners · ${days.length-days.filter(d=>off.has(d.date)).length} class days`;
 }
-function updateAttendanceCount(){const vals=Object.values(selectedAttendance);$("attendanceCount").textContent=`${vals.filter(x=>x.status==="Present").length} present · ${vals.filter(x=>x.status==="Absent").length} absent · ${vals.filter(x=>x.status==="Late").length} late`;}
-function saveAttendance(){const date=$("attendanceDate").value;if(!date)return toast("Choose an attendance date.");const cls=activeClass();data.attendance=data.attendance.filter(a=>!(a.classId===cls.id&&a.date===date));Object.entries(selectedAttendance).forEach(([studentId,v])=>data.attendance.push({id:uid(),classId:cls.id,studentId,date,status:v.status,note:v.note,createdAt:new Date().toISOString()}));save();toast("Attendance saved on this device.");updateAttendanceCount();}
+function setAttendance(studentId,date,code){const id=activeClass().id;const old=data.attendance.find(a=>a.classId===id&&a.studentId===studentId&&a.date===date);data.attendance=data.attendance.filter(a=>!(a.classId===id&&a.studentId===studentId&&a.date===date));if(code)data.attendance.push({id:uid(),classId:id,studentId,date,status:ATT_STATUS[code],note:old?.note||"",createdAt:new Date().toISOString()});}
+function applyCell(td,code,moveDown){const r=+td.dataset.r,c=+td.dataset.c;setAttendance(td.dataset.s,td.dataset.d,code);save();renderAttendance();let el=cellAt(moveDown?r+1:r,c);while(el&&el.dataset.off){el=cellAt(+el.dataset.r+1,c);}(el||cellAt(r,c))?.focus();}
+function closeAttMenu(){$("attMenu").hidden=true;attTarget=null;}
+function openAttMenu(anchor,items,target){attTarget=target;const m=$("attMenu");m.innerHTML=items.map(i=>`<button type="button" data-act="${i.act}">${i.chip?`<b class="kc st-${i.chip}">${i.chip}</b>`:""}${i.label}</button>`).join("");m.hidden=false;const r=anchor.getBoundingClientRect(),mw=m.offsetWidth,mh=m.offsetHeight;m.style.left=Math.max(8,Math.min(r.left,innerWidth-mw-8))+"px";m.style.top=(r.bottom+mh+8>innerHeight?Math.max(8,r.top-mh):r.bottom)+"px";}
+function attMenuAction(act){const t=attTarget;if(!t)return;closeAttMenu();
+  if(t.type==="cell"){applyCell(t.td,act==="clear"?"":act,false);return;}
+  const date=t.date,cls=activeClass();
+  if(act==="off"){const arr=noClassDates();const i=arr.indexOf(date);if(i>=0)arr.splice(i,1);else arr.push(date);save();renderAttendance();toast(i>=0?"Class day restored.":"Marked as no class.");return;}
+  cls.students.forEach(s=>setAttendance(s.id,date,act==="P"?"P":""));save();renderAttendance();toast(act==="P"?"All learners marked present.":"Column cleared.");}
+function attGridClick(e){
+  const th=e.target.closest(".dayhead");
+  if(th){openAttMenu(th,[{act:"P",chip:"P",label:"Mark all present"},{act:"clear",label:"Clear this day"},{act:"off",label:th.classList.contains("off")?"Restore class day":"No class (holiday / suspension)"}],{type:"col",date:th.dataset.date});return;}
+  const td=e.target.closest(".att-cell");if(!td||td.dataset.off)return;
+  td.focus();
+  openAttMenu(td,[{act:"P",chip:"P",label:"Present"},{act:"A",chip:"A",label:"Absent"},{act:"L",chip:"L",label:"Late"},{act:"E",chip:"E",label:"Excused"},{act:"clear",label:"Clear"}],{type:"cell",td});
+}
+function attGridKey(e){const td=e.target.closest(".att-cell");if(!td||td.dataset.off)return;const k=e.key,r=+td.dataset.r,c=+td.dataset.c;
+  const go=(dr,dc)=>{let nr=r+dr,nc=c+dc,el=cellAt(nr,nc);while(el&&el.dataset.off){nr+=dr;nc+=dc;el=cellAt(nr,nc);}if(el){closeAttMenu();el.focus();}};
+  if(k==="ArrowDown"||k==="Enter"){e.preventDefault();go(1,0);}
+  else if(k==="ArrowUp"){e.preventDefault();go(-1,0);}
+  else if(k==="ArrowLeft"){e.preventDefault();go(0,-1);}
+  else if(k==="ArrowRight"||k==="Tab"&&!e.shiftKey&&cellAt(r,c+1)){e.preventDefault();go(0,1);}
+  else if(k===" "||k==="F2"){e.preventDefault();td.click();}
+  else if(k==="Backspace"||k==="Delete"){e.preventDefault();applyCell(td,"",false);}
+  else if(/^[pale]$/i.test(k)&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();applyCell(td,k.toUpperCase(),true);}
+  else if(k==="Escape")closeAttMenu();
+}
+function shiftMonth(n){const [y,m]=attMonth.split("-").map(Number);const d=new Date(y,m-1+n,1);attMonth=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");renderAttendance();}
 function fairPick(){const list=students().filter(s=>!todayRecords().some(r=>r.studentId===s.id));const candidates=list.length?list:students();if(!candidates.length){toast("Add students first.");return null;}const weights=candidates.map(s=>1/(1+recordsFor(s.id).length));const total=weights.reduce((a,b)=>a+b,0);let n=Math.random()*total;for(let i=0;i<candidates.length;i++){n-=weights[i];if(n<=0)return candidates[i];}return candidates[candidates.length-1];}
 function chooseStudent(s){if(!s)return;currentStudentId=s.id;$("currentStudentName").textContent=s.name;$("currentAvatar").textContent=initials(s.name);$("currentStudentMeta").textContent=`Seat ${s.seat} · Group ${s.group||"Unassigned"} · ${recordsFor(s.id).length} previous recitations`;renderQueue();}
 function renderRecitation(){populateClassSelects();$("sessionDate").textContent=new Date().toLocaleDateString();if(currentStudentId&&!students().some(s=>s.id===currentStudentId))currentStudentId=null;if(currentStudentId){const s=students().find(x=>x.id===currentStudentId);if(s)chooseStudent(s);}else{$("currentStudentName").textContent="Choose a student";$("currentAvatar").textContent="?";$("currentStudentMeta").textContent="Use Random Picker to begin.";}renderQueue();resetTimer();}
@@ -66,7 +139,10 @@ function renderReports(){const list=students(),rec=data.records.filter(r=>r.clas
 function csvDownload(filename,rows){const csv=rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});downloadBlob(filename,blob);}
 function downloadBlob(filename,blob){const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function exportRecitation(){const rows=[["No.","Student Name","Seat","Group","Number of Recitations","Average Score","Total Points"],...students().map((s,i)=>{const rs=recordsFor(s.id);return[i+1,s.name,s.seat,s.group,rs.length,rs.length?avg(rs.map(r=>r.score)).toFixed(2):"",rs.reduce((a,r)=>a+r.score,0)]})];csvDownload("recitation-masterlist-"+todayISO()+".csv",rows);toast("Recitation CSV downloaded.");}
-function exportAttendance(){const rows=[["Date","Student Name","Status","Note"],...data.attendance.filter(a=>a.classId===activeClass()?.id).map(a=>[a.date,students().find(s=>s.id===a.studentId)?.name||"Student removed",a.status,a.note])];csvDownload("attendance-summary-"+todayISO()+".csv",rows);toast("Attendance CSV downloaded.");}
+function exportAttendance(){const cls=activeClass();if(!cls)return;const days=monthDays(attMonth),off=new Set(noClassDates()),map=attMap();const list=cls.students.slice().sort((a,b)=>(a.seat||0)-(b.seat||0));
+  const rows=[["No.","Learner's Name",...days.map(d=>d.date+(off.has(d.date)?" (No class)":"")),"Present","Absent","Late","Excused","Rate %"]];
+  list.forEach((s,i)=>{const t=studentTotals(s,days,off,map);rows.push([i+1,s.name,...days.map(d=>{if(off.has(d.date))return"";const r=map.get(s.id+"|"+d.date);return r?ATT_CODE[r.status]||"":"";}),t.P,t.A,t.L,t.E,t.rate===null?"":t.rate]);});
+  csvDownload("attendance-"+attMonth+"-"+cls.name.replace(/[^A-Za-z0-9]+/g,"_")+".csv",rows);toast("Attendance grid downloaded.");}
 function exportGroups(){const rows=[["Group","Points","Members"],...data.groups.map(g=>[g.name,g.points,students().filter(s=>+s.group===g.id).map(s=>s.name).join("; ")])];csvDownload("group-performance-"+todayISO()+".csv",rows);toast("Group report downloaded.");}
 function exportIndividual(){const id=$("individualStudentSelect").value,s=students().find(x=>x.id===id);if(!s)return toast("No student selected.");const rs=recordsFor(s.id);const att=data.attendance.filter(a=>a.classId===activeClass().id&&a.studentId===s.id);const w=window.open("","_blank");if(!w)return toast("Allow pop-ups to print the report.");w.document.write(`<html><head><title>Student Progress Report</title><style>body{font:14px Arial;padding:35px;color:#17243b}h1{color:#123f91}table{border-collapse:collapse;width:100%;margin-top:20px}td,th{border:1px solid #ccd4df;padding:8px;text-align:left}</style></head><body><h1>Recitation Tracker</h1><h2>Individual Student Progress Report</h2><p>${escapeHTML(data.settings.school)} · ${escapeHTML(activeClass().name)}</p><h3>${escapeHTML(s.name)}</h3><p>Seat: ${s.seat} | Group: ${s.group} | Recitations: ${rs.length} | Average: ${rs.length?avg(rs.map(r=>r.score)).toFixed(2):"—"}/10</p><h3>Recitation History</h3><table><tr><th>Date</th><th>Result</th><th>Score</th><th>Remark</th></tr>${rs.map(r=>`<tr><td>${r.date}</td><td>${r.result}</td><td>${r.score}/10</td><td>${escapeHTML(r.remark)}</td></tr>`).join("")}</table><h3>Attendance History</h3><table><tr><th>Date</th><th>Status</th><th>Note</th></tr>${att.map(a=>`<tr><td>${a.date}</td><td>${a.status}</td><td>${escapeHTML(a.note)}</td></tr>`).join("")}</table><p style="margin-top:40px">Teacher's signature: ____________________</p><script>window.print()<\/script></body></html>`);w.document.close();}
 function loadSettings(){$("teacherName").value=data.settings.teacher||"";$("schoolName").value=data.settings.school||"";}
@@ -84,9 +160,13 @@ function bindEvents(){
  ["dashboardClassSelect","attendanceClassSelect","recitationClassSelect","studentsClassSelect"].forEach(id=>$(id).addEventListener("change",e=>{switchClass(e.target.value);if(id==="attendanceClassSelect")renderAttendance();if(id==="recitationClassSelect")renderRecitation();if(id==="studentsClassSelect")renderStudents();}));
  $("addClassBtn").onclick=addClass;$("addStudentBtn").onclick=addStudent;
  $("classGrid").addEventListener("click",e=>{const b=e.target.closest("[data-class-select],[data-class-edit]");if(!b)return;const c=data.classes.find(x=>x.id===(b.dataset.classSelect||b.dataset.classEdit));if(b.dataset.classSelect){switchClass(c.id);showView("dashboard");}else openDialog("Edit Class",[{name:"name",label:"Class name",value:c.name,required:true},{name:"subject",label:"Subject",value:c.subject},{name:"grade",label:"Grade",value:c.grade}],v=>{Object.assign(c,v);save();renderClasses();toast("Class updated.");});});
- $("attendanceDate").onchange=renderAttendance;$("attendanceBody").addEventListener("change",e=>{if(e.target.dataset.attStatus){selectedAttendance[e.target.dataset.attStatus].status=e.target.value;updateAttendanceCount();}if(e.target.dataset.attNote)selectedAttendance[e.target.dataset.attNote].note=e.target.value;});
- $("markAllPresent").onclick=()=>{Object.keys(selectedAttendance).forEach(id=>selectedAttendance[id].status="Present");document.querySelectorAll("[data-att-status]").forEach(el=>el.value="Present");updateAttendanceCount();};
- $("saveAttendanceBtn").onclick=saveAttendance;
+ $("attendanceMonth").onchange=e=>{if(e.target.value){attMonth=e.target.value;renderAttendance();}};$("attPrevMonth").onclick=()=>shiftMonth(-1);$("attNextMonth").onclick=()=>shiftMonth(1);$("attToday").onclick=()=>{attMonth=todayISO().slice(0,7);renderAttendance();};
+ $("attendanceGrid").addEventListener("click",attGridClick);$("attendanceGrid").addEventListener("keydown",attGridKey);
+ $("attMenu").addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(b)attMenuAction(b.dataset.act);});
+ document.addEventListener("click",e=>{if(!e.target.closest("#attMenu,.att-cell,.dayhead"))closeAttMenu();});
+ $("exportAttendanceGrid").onclick=exportAttendance;$("printAttendanceBtn").onclick=()=>window.print();
+
+
  $("randomPickerBtn").onclick=nextStudent;$("nextStudentBtn").onclick=nextStudent;$("skipStudentBtn").onclick=()=>{if(!currentStudentId)return toast("Pick a student first.");toast("Student skipped without a score.");nextStudent();};
  $("studentQueue").addEventListener("click",e=>{const row=e.target.closest("[data-queue-student]");if(row)chooseStudent(students().find(s=>s.id===row.dataset.queueStudent));});
  document.querySelectorAll(".filter").forEach(b=>b.onclick=()=>{queueFilter=b.dataset.filter;document.querySelectorAll(".filter").forEach(x=>x.classList.toggle("active",x===b));renderQueue();});
@@ -101,5 +181,5 @@ function bindEvents(){
  $("backupBtn").onclick=backup;$("restoreBtn").onclick=restore;
  $("resetAppBtn").onclick=()=>{if(confirm("This will delete all data in this browser and restore demo data. Continue?")){data=makeDemo();save();currentStudentId=null;showView("dashboard");toast("Demo data restored.");}};
 }
-function init(){if(!data.classes?.length)data=makeDemo();if(!data.groups)data.groups=makeDemo().groups;save();bindEvents();populateClassSelects();renderDashboard();$("attendanceDate").value=todayISO();$("connectionLabel").textContent="Offline-ready · Saved on this device";window.addEventListener("online",()=>$("connectionLabel").textContent="Online · Local demo only");window.addEventListener("offline",()=>$("connectionLabel").textContent="Offline-ready · Saved on this device");}
+function init(){if(!data.classes?.length)data=makeDemo();if(!data.groups)data.groups=makeDemo().groups;if(!data.noClass)data.noClass={};if(!data.classes.some(c=>c.id==="class-roster")){data.classes.push(rosterClass());data.activeClassId="class-roster";}save();bindEvents();populateClassSelects();renderDashboard();$("connectionLabel").textContent="Offline-ready · Saved on this device";window.addEventListener("online",()=>$("connectionLabel").textContent="Online · Local demo only");window.addEventListener("offline",()=>$("connectionLabel").textContent="Offline-ready · Saved on this device");}
 init();

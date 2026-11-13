@@ -3,13 +3,13 @@
 ## Run it
 1. Extract the ZIP file.
 2. Open `index.html` in a modern browser (Chrome or Edge recommended).
-3. The app starts with 35 sample learners and four sample groups.
+3. The app starts with a 15-learner class list (Grade 11 – Class List) plus 35 sample learners and four sample groups.
 4. Use the left navigation to test Dashboard, Classes, Attendance, Recitation, Groups, Students, Reports, and Settings.
 
 ## Included
 - Responsive teacher dashboard for laptop and mobile
 - Class/section management
-- Attendance marking (Present, Absent, Late, Excused)
+- Spreadsheet-style monthly attendance grid (learners as rows, school days as columns; P / A / L / E marks, no-class days, monthly totals, CSV export and printing)
 - Fairness-aware random student picker
 - Live recitation timer and rubric inputs
 - Correct / Partial / Incorrect scoring

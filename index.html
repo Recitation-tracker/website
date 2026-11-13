@@ -81,9 +81,10 @@
       </section>
 
       <section class="view" id="view-attendance">
-        <div class="section-intro"><div><h2>Attendance</h2><p>Mark attendance quickly. Records are saved locally.</p></div><div class="inline-actions"><input type="date" id="attendanceDate" class="input-control"><button class="btn btn-primary" id="saveAttendanceBtn">Save Attendance</button></div></div>
-        <div class="toolbar"><select id="attendanceClassSelect" class="select-control"></select><button class="btn btn-soft" id="markAllPresent">Mark All Present</button><span class="muted" id="attendanceCount"></span></div>
-        <div class="panel table-wrap"><table><thead><tr><th>Student</th><th>Seat</th><th>Attendance status</th><th>Note (optional)</th></tr></thead><tbody id="attendanceBody"></tbody></table></div>
+        <div class="section-intro"><div><h2>Attendance</h2><p>Click a cell to mark it, or select a cell and type P, A, L or E. Changes save automatically on this device.</p></div><div class="inline-actions"><button class="btn btn-outline" id="printAttendanceBtn">⎙ Print</button><button class="btn btn-primary" id="exportAttendanceGrid">⇩ Export Excel (CSV)</button></div></div>
+        <div class="toolbar"><select id="attendanceClassSelect" class="select-control"></select><button class="btn btn-soft" id="attPrevMonth" aria-label="Previous month">‹</button><input type="month" id="attendanceMonth" class="input-control"><button class="btn btn-soft" id="attNextMonth" aria-label="Next month">›</button><button class="btn btn-soft" id="attToday">This month</button><span class="muted" id="attendanceCount"></span></div>
+        <div class="att-legend"><span><b class="st-P">P</b> Present</span><span><b class="st-A">A</b> Absent</span><span><b class="st-L">L</b> Late</span><span><b class="st-E">E</b> Excused</span><span><b class="off"></b> No class</span><span class="muted">Click a day number for column options · Rate = (Present + Late) ÷ days marked</span></div>
+        <div class="att-wrap" id="attendanceGrid"><table class="att-grid" id="attendanceTable"></table></div>
       </section>
 
       <section class="view" id="view-recitation">
@@ -126,7 +127,7 @@
         <div class="section-intro"><div><h2>Reports & Analytics</h2><p>Export classroom records for teacher review and school documentation.</p></div></div>
         <div class="report-grid">
           <article class="report-card"><div class="report-icon green">▦</div><h3>Recitation Masterlist</h3><p>Student totals, averages, and number of recitations.</p><button class="btn btn-outline full" id="exportRecitation">Export CSV / Excel</button></article>
-          <article class="report-card"><div class="report-icon blue">✓</div><h3>Attendance Summary</h3><p>Present, absent, late, and excused records by date.</p><button class="btn btn-outline full" id="exportAttendance">Export CSV / Excel</button></article>
+          <article class="report-card"><div class="report-icon blue">✓</div><h3>Attendance Summary</h3><p>Monthly attendance grid with P / A / L / E marks and totals per learner.</p><button class="btn btn-outline full" id="exportAttendance">Export CSV / Excel</button></article>
           <article class="report-card"><div class="report-icon purple">♙</div><h3>Individual Progress</h3><p>Choose a learner and download a printable summary.</p><select id="individualStudentSelect" class="select-control full"></select><button class="btn btn-outline full" id="exportIndividual">Download Student Report</button></article>
           <article class="report-card"><div class="report-icon yellow">♟</div><h3>Group Performance</h3><p>Current group points and membership.</p><button class="btn btn-outline full" id="exportGroups">Export Group Report</button></article>
         </div>
@@ -144,6 +145,7 @@
       </section>
     </main>
   </div>
+  <div class="att-menu" id="attMenu" hidden></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <dialog id="simpleDialog" class="modal"><form method="dialog"><div class="modal-heading"><h3 id="dialogTitle">Add item</h3><button class="icon-button" value="cancel" aria-label="Close">×</button></div><div id="dialogBody"></div><div class="modal-actions"><button class="btn btn-outline" value="cancel">Cancel</button><button class="btn btn-primary" id="dialogSave" value="default">Save</button></div></form></dialog>
   <script src="app.js"></script>
