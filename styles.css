@@ -144,3 +144,11 @@ table.att-grid{width:auto;border-collapse:separate;border-spacing:0;white-space:
 .att-menu .kc.rt-5,.att-menu .kc.rt-4,.att-menu .kc.rt-3,.att-menu .kc.rt-2,.att-menu .kc.rt-1{font-weight:800}
 @media print{body.print-rec #view-reports>*:not(.rec-panel){display:none!important}body.print-rec .rec-panel .toolbar,body.print-rec .rec-panel .panel-heading .inline-actions,body.print-rec .rec-panel .att-legend{display:none!important}}
 @media(max-width:620px){.rec-types{grid-template-columns:1fr}}
+
+/* ---------- Group Activity (teams from the generator) ---------- */
+.group-card{border-top:4px solid var(--c,#123f91)}
+.group-top-tools{display:flex;align-items:center;gap:6px}.group-top-tools .gen-dice{width:28px;height:28px;font-size:13px}
+.gm-list{list-style:none;margin:10px 0 14px;padding:0;display:grid;gap:4px;max-height:190px;overflow:auto}
+.gm-list li{font-size:11px;font-weight:600;color:#33476b;background:color-mix(in srgb,var(--c,#123f91) 9%,#fff);border-radius:7px;padding:5px 9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gm-list .gm-empty{background:#f3f5f9;color:#8c99ad;font-weight:500}
+.gen-apply{background:linear-gradient(90deg,#a855f7,#ec4899);border:0;color:#fff}

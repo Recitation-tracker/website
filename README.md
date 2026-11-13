@@ -39,3 +39,7 @@ Open **Group Generator** from the sidebar. Group by size (3–6), by number of g
 ## Recitation scoring (Oral Recitation / Boardwork)
 
 On the Recitation page the learner's name is shown in the banner. Choose **Oral Recitation** or **Boardwork** to open its 5-point Likert rubric (5 Outstanding, 4 Very Satisfactory, 3 Satisfactory, 2 Needs Improvement, 1 Poor), pick a rating (or press 1-5), and save. Scores appear in **Reports > Recitation Record**, a monthly grid like the attendance sheet (tabs: Oral, Boardwork, Combined). Older records are converted to the 1-5 scale automatically. The code is in `recitation.js`.
+
+## Generator → Group Activity
+
+In **Group Generator**, press **Use in Group Activity** (or **Use in Group Activity** on a saved grouping). The team names and members become that class's teams in Group Activity (points start at 0), and team names appear in the Students table and on the Recitation screen. Renaming a team in either place updates the other. Classes that never used the generator keep the default four teams.

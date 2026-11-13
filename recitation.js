@@ -48,7 +48,7 @@ function recSave(){
   save();
   toast(`${recTypeLabel(recType)}: ${recRating} (${REC_LEVELS[recRating]}) saved for ${s.name}`);
   recResetPanel();renderQueue();renderDashboard();
-  $("currentStudentMeta").textContent=`Seat ${s.seat} · Group ${s.group||"Unassigned"} · ${recordsFor(s.id).length} previous recitations`;
+  $("currentStudentMeta").textContent=`Seat ${s.seat} · ${groupName(s)} · ${recordsFor(s.id).length} previous recitations`;
 }
 
 /* ---------- Recitation Record grid (Reports) ---------- */

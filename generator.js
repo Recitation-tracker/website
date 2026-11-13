@@ -186,11 +186,12 @@ function genRenderResults(){
   box.innerHTML=`
     <div class="gen-head">
       <div><h3>${c.groups.length} groups · ${total} learners</h3><p class="muted">${escapeHTML(c.label)} · sizes ${used.join(", ")}</p></div>
-      <div class="gen-badges">${badge}</div>
+      <div class="gen-badges">${badge}${genIsApplied()?`<span class="pill green">👥 Active in Group Activity</span>`:""}</div>
     </div>
     <div class="gen-actions">
       <input id="genTitle" class="input-control" placeholder="Activity title (optional)" value="${escapeHTML(c.title||"")}" maxlength="60">
       <button class="btn btn-primary" id="genSave">💾 ${c.savedId?"Update saved":"Save groups"}</button>
+      <button class="btn ${genIsApplied()?"btn-soft":"btn-primary gen-apply"}" id="genApply">👥 ${genIsApplied()?"Update Group Activity":"Use in Group Activity"}</button>
       <button class="btn btn-outline" id="genXlsx">⇩ Excel</button>
       <button class="btn btn-outline" id="genPdf">⇩ PDF</button>
       <button class="btn btn-soft" id="genRename">🎲 New names</button>
@@ -205,10 +206,44 @@ function genRenderSaved(){
     <div class="gen-saved-row" data-id="${s.id}">
       <div class="gen-saved-info"><strong>${escapeHTML(s.title)}</strong><small>${genDate(s.createdAt)} · ${genTime(s.createdAt)} · ${escapeHTML(s.label)} · ${s.groups.length} groups</small>
         <div class="gen-minis">${s.groups.map((g,i)=>`<span class="gen-mini" style="--c:${GEN_COLORS[i%GEN_COLORS.length]}">${escapeHTML(g.name)}</span>`).join("")}</div></div>
-      <div class="gen-saved-btns"><button class="btn btn-soft" data-act="view">View</button><button class="btn btn-outline" data-act="xlsx">Excel</button><button class="btn btn-outline" data-act="pdf">PDF</button><button class="btn btn-danger" data-act="del">Delete</button></div>
+      <div class="gen-saved-btns"><button class="btn btn-soft" data-act="view">View</button><button class="btn btn-soft" data-act="apply">Use in Group Activity</button><button class="btn btn-outline" data-act="xlsx">Excel</button><button class="btn btn-outline" data-act="pdf">PDF</button><button class="btn btn-danger" data-act="del">Delete</button></div>
     </div>`).join(""):`<div class="empty-state">No saved groupings yet. Generate groups and press <b>Save groups</b> — saved groupings help the generator avoid repeating teammates.</div>`;
 }
 function renderGenerator(){populateClassSelects();if(genCurrent&&genCurrent.classId!==activeClass()?.id){genClearTimers();genBanner("");genCurrent=null;}genSetupRender();if(!genRevealing)genRenderResults();genRenderSaved();}
+
+
+/* ---------- send teams to Group Activity ---------- */
+function genKey(){return genCurrent?(genCurrent.savedId||genCurrent.id):null;}
+function genIsApplied(){const m=(data.groupMeta||{})[activeClass()?.id];return !!(m&&genCurrent&&m.key===genKey());}
+function genApplySet(set,key,title){
+  const cls=activeClass();if(!cls||!set?.groups?.length)return false;
+  const pts=classGroups().reduce((a,x)=>a+(x.points||0),0);
+  if(pts>0&&!confirm(`Replace the current teams for ${cls.name}?\nTheir ${pts} point${pts>1?"s":""} will be reset to zero.`))return false;
+  ensureGroupData();
+  data.classGroups[cls.id]=set.groups.map((x,i)=>({id:i+1,name:x.name,points:0}));
+  cls.students.forEach(s=>{s.group=null;});
+  set.groups.forEach((x,i)=>x.members.forEach(m=>{const s=cls.students.find(y=>y.id===m.id);if(s)s.group=i+1;}));
+  data.groupMeta[cls.id]={key,title,at:new Date().toISOString()};
+  save();renderDashboard();
+  toast(`${set.groups.length} teams sent to Group Activity.`);
+  return true;
+}
+function genApplyCurrent(){
+  const c=genCurrent;if(!c)return;
+  if(genRevealing)genFinish();
+  const t=($("genTitle")?.value||"").trim()||c.title||genDefaultTitle(c);c.title=t;
+  if(genApplySet(c,genKey(),t)){genRenderResults();genFinish();}
+}
+function genPushNames(){
+  if(!genCurrent||!genIsApplied())return;
+  const arr=classGroups();genCurrent.groups.forEach((x,i)=>{if(arr[i])arr[i].name=x.name;});save();
+}
+function genSyncFromGroups(){
+  // a team was renamed in Group Activity: mirror it in the generator's current groups
+  if(!genCurrent||!genIsApplied())return;
+  classGroups().forEach((x,i)=>{if(genCurrent.groups[i])genCurrent.groups[i].name=x.name;});
+  if(!genRevealing&&$("genResults"))genRenderResults();
+}
 
 /* ---------- save / load / delete ---------- */
 function genDefaultTitle(c){return "Groups – "+genDate(c.createdAt)+" "+genTime(c.createdAt);}
@@ -379,22 +414,24 @@ function genInit(){
   $("genGo").onclick=genGenerate;
   $("genBanner").addEventListener("click",e=>{if(e.target.closest("#genSkip"))genFinish();});
   const res=$("genResults");
-  res.addEventListener("input",e=>{const i=e.target.closest(".gen-name");if(i&&genCurrent)genCurrent.groups[+i.dataset.g].name=i.value;});
+  res.addEventListener("input",e=>{const i=e.target.closest(".gen-name");if(i&&genCurrent){genCurrent.groups[+i.dataset.g].name=i.value;genPushNames();}});
   res.addEventListener("change",e=>{if(e.target.id==="genTitle"&&genCurrent)genCurrent.title=e.target.value.trim();});
   res.addEventListener("click",e=>{
     if(!genCurrent)return;
     const dice=e.target.closest(".gen-dice");
-    if(dice){const used=new Set(genCurrent.groups.map(g=>g.name)),n=genOneName(genCurrent.theme,used);if(n){genCurrent.groups[+dice.dataset.g].name=n;dice.parentElement.querySelector(".gen-name").value=n;}else toast("Plain numbering is on. Choose a name theme first.");return;}
+    if(dice){const used=new Set(genCurrent.groups.map(g=>g.name)),n=genOneName(genCurrent.theme,used);if(n){genCurrent.groups[+dice.dataset.g].name=n;dice.parentElement.querySelector(".gen-name").value=n;genPushNames();}else toast("Plain numbering is on. Choose a name theme first.");return;}
     const id=e.target.closest("button")?.id;
     if(id==="genSave")genSave();
+    else if(id==="genApply")genApplyCurrent();
     else if(id==="genXlsx")genExport("xlsx");
     else if(id==="genPdf")genExport("pdf");
     else if(id==="genAgain")genGenerate();
-    else if(id==="genRename"){const nm=genNames(genCurrent.theme==="numbered"?genCfg().theme:genCurrent.theme,genCurrent.groups.length);genCurrent.theme=genCurrent.theme==="numbered"?genCfg().theme:genCurrent.theme;genCurrent.groups.forEach((g,i)=>g.name=nm[i]);document.querySelectorAll("#genResults .gen-name").forEach((inp,i)=>inp.value=nm[i]);}
+    else if(id==="genRename"){const nm=genNames(genCurrent.theme==="numbered"?genCfg().theme:genCurrent.theme,genCurrent.groups.length);genCurrent.theme=genCurrent.theme==="numbered"?genCfg().theme:genCurrent.theme;genCurrent.groups.forEach((g,i)=>g.name=nm[i]);document.querySelectorAll("#genResults .gen-name").forEach((inp,i)=>inp.value=nm[i]);genPushNames();}
   });
   $("genSaved").addEventListener("click",e=>{
     const b=e.target.closest("[data-act]");if(!b)return;const row=b.closest(".gen-saved-row"),s=genSets().find(x=>x.id===row.dataset.id);if(!s)return;
     if(b.dataset.act==="view")genLoad(s.id);
+    else if(b.dataset.act==="apply"){if(genApplySet(s,s.id,s.title)){if(genCurrent&&genKey()===s.id&&!genRevealing)genRenderResults();}}
     else if(b.dataset.act==="xlsx")genExport("xlsx",s);
     else if(b.dataset.act==="pdf")genExport("pdf",s);
     else if(b.dataset.act==="del"&&confirm("Delete this saved grouping?")){data.groupSets=genSets().filter(x=>x.id!==s.id);if(genCurrent&&genCurrent.savedId===s.id)genCurrent.savedId=null;save();genRenderSaved();genSetupRender();if(genCurrent&&!genRevealing)genRenderResults();}
