@@ -109,3 +109,38 @@ table.att-grid{width:auto;border-collapse:separate;border-spacing:0;white-space:
 .gen-saved-btns{display:flex;gap:6px;flex:none}
 @media(max-width:1100px){.gen-layout{grid-template-columns:1fr}}
 @media(max-width:760px){.gen-saved-row{flex-direction:column;align-items:flex-start}.gen-saved-btns{flex-wrap:wrap}}
+
+/* ---------- Rubric scoring (Oral Recitation / Boardwork) ---------- */
+.student-banner{text-align:center;background:#f3f7fd;border:1px solid #dfe8f5;border-radius:16px;padding:26px 20px 22px;margin:4px 0 16px}
+.student-banner .eyebrow{display:block;font-size:11px;letter-spacing:.9px;color:#7b8ba3;font-weight:800;margin-bottom:10px}
+.student-banner h2{font:800 clamp(24px,3.2vw,36px)/1.15 Manrope,sans-serif;color:var(--navy);margin:0 0 10px;word-break:break-word}
+.student-banner p{margin:0;color:#6e7f97;font-size:13px}
+.today-chips{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:12px}.today-chips:empty{display:none}
+.rec-types{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.rec-type{display:flex;align-items:center;justify-content:center;gap:10px;border:2px solid #d9e3f2;background:#fff;color:#2a4170;border-radius:14px;padding:18px 12px;font:800 15px 'DM Sans',Arial,sans-serif;cursor:pointer;transition:.15s}
+.rec-type span{font-size:20px}.rec-type:hover{border-color:#9db6e6;background:#f5f8ff}
+.rec-type.active{background:var(--navy);border-color:var(--navy);color:#fff;box-shadow:0 8px 20px rgba(18,63,145,.25)}
+.rubric-panel{border:1px solid #dbe4f2;border-radius:14px;padding:16px;margin-bottom:16px;background:#fcfdff;animation:winnerPop .3s ease}
+.rubric-panel[hidden]{display:none}
+.rubric-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.rubric-head strong{font:800 15px Manrope,sans-serif;color:var(--ink)}.rubric-head small{color:#7b8ba3;font-size:11px}
+.rubric-criterion{font-size:11px;line-height:1.55;color:#55657d;background:#f1f5fb;border-radius:9px;padding:10px 12px;margin:0 0 12px}
+.likert{display:grid;gap:8px;margin-bottom:14px}
+.likert-row{display:flex;align-items:center;gap:12px;text-align:left;width:100%;background:#fff;border:2px solid #e3e9f3;border-radius:12px;padding:10px 12px;cursor:pointer;transition:.12s;font-family:inherit}
+.likert-row:hover{border-color:#a9bde6}
+.likert-row.selected{border-color:var(--navy);background:#eef4ff;box-shadow:0 4px 14px rgba(18,63,145,.15)}
+.lk-num{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font:800 18px Manrope,sans-serif}
+.lk-body{flex:1;min-width:0}.lk-body strong{display:block;font-size:13px;color:var(--ink);margin-bottom:2px}.lk-body small{display:block;font-size:11px;line-height:1.45;color:#66778f}
+.lk-check{flex:none;width:22px;height:22px;border-radius:50%;background:var(--navy);color:#fff;display:none;place-items:center;font-size:12px;font-weight:800}
+.likert-row.selected .lk-check{display:grid}
+.rubric-save{margin-top:12px;padding:14px}.rubric-save:disabled{opacity:.55;cursor:not-allowed}
+/* rating colours (shared by the likert chips, legend and report grid) */
+.rt-5{background:#b7e4c7!important;color:#14532d}.rt-4{background:#d9f0b8!important;color:#3f6212}.rt-3{background:#fff0b8!important;color:#8a6500}.rt-2{background:#ffd9b3!important;color:#9a4a00}.rt-1{background:#ffc9cf!important;color:#9b1c28}
+/* report grid additions */
+.rec-tabs{min-width:310px}.rec-panel .att-wrap{max-height:540px}.rec-panel .toolbar{flex-wrap:wrap}
+.att-legend b.rt-5,.att-legend b.rt-4,.att-legend b.rt-3,.att-legend b.rt-2,.att-legend b.rt-1{border-color:transparent}
+.att-grid .rt-src{font-style:normal;font-size:7px;font-weight:800;opacity:.65;position:absolute;right:2px;bottom:0;letter-spacing:.3px}
+.att-grid thead th.today{background:#f5c518;color:#10233f}
+.att-menu .kc.rt-5,.att-menu .kc.rt-4,.att-menu .kc.rt-3,.att-menu .kc.rt-2,.att-menu .kc.rt-1{font-weight:800}
+@media print{body.print-rec #view-reports>*:not(.rec-panel){display:none!important}body.print-rec .rec-panel .toolbar,body.print-rec .rec-panel .panel-heading .inline-actions,body.print-rec .rec-panel .att-legend{display:none!important}}
+@media(max-width:620px){.rec-types{grid-template-columns:1fr}}

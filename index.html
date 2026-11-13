@@ -53,13 +53,13 @@
         <div class="stats-grid">
           <article class="stat-card"><div class="stat-icon blue">♙</div><div><span>Total Students</span><strong id="statStudents">0</strong><small>In selected class</small></div></article>
           <article class="stat-card"><div class="stat-icon yellow">✓</div><div><span>Recited Today</span><strong id="statRecited">0</strong><small id="statWaiting">0 waiting</small></div></article>
-          <article class="stat-card"><div class="stat-icon green">★</div><div><span>Average Score</span><strong id="statAverage">—</strong><small>Recorded recitations</small></div></article>
+          <article class="stat-card"><div class="stat-icon green">★</div><div><span>Average Rating</span><strong id="statAverage">—</strong><small>Recorded recitations</small></div></article>
           <article class="stat-card"><div class="stat-icon purple">♟</div><div><span>Top Group</span><strong id="statTopGroup">—</strong><small>By group points</small></div></article>
         </div>
         <div class="content-grid">
           <article class="panel">
             <div class="panel-heading"><div><h3>Class Leaderboard</h3><p>Participation and recitation records</p></div><select id="dashboardClassSelect" class="select-control"></select></div>
-            <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Student</th><th>Score</th><th>Recitations</th><th>Status</th></tr></thead><tbody id="leaderboardBody"></tbody></table></div>
+            <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Student</th><th>Avg rating</th><th>Recitations</th><th>Status</th></tr></thead><tbody id="leaderboardBody"></tbody></table></div>
           </article>
           <article class="panel">
             <div class="panel-heading"><div><h3>Participation Balance</h3><p>Students who still need an opportunity</p></div></div>
@@ -93,20 +93,17 @@
         <div class="recitation-layout">
           <article class="panel live-panel">
             <div class="live-top"><span class="live-badge"><i></i> LIVE SESSION</span><span class="muted" id="sessionDate"></span></div>
-            <div class="current-student">
-              <div class="student-avatar large" id="currentAvatar">?</div>
-              <div><span class="eyebrow">CURRENT STUDENT</span><h2 id="currentStudentName">Choose a student</h2><p id="currentStudentMeta">Use Random Picker to begin.</p></div>
+            <div class="student-banner"><span class="eyebrow">CURRENT STUDENT</span><h2 id="currentStudentName">Choose a student</h2><p id="currentStudentMeta">Spin the wheel to begin.</p><div class="today-chips" id="todayChips"></div></div>
+            <div class="rec-types" id="recTypes"><button type="button" class="rec-type" data-type="oral"><span>🎙</span> Oral Recitation</button><button type="button" class="rec-type" data-type="boardwork"><span>📝</span> Boardwork</button></div>
+            <div class="rubric-panel" id="rubricPanel" hidden>
+              <div class="rubric-head"><strong id="rubricTitle"></strong><small>Rate from <b>5</b> (highest) to <b>1</b> (lowest)</small></div>
+              <p class="rubric-criterion" id="rubricCriterion"></p>
+              <div class="likert" id="likert" role="radiogroup" aria-label="Rating"></div>
+              <label class="field-label" for="teacherRemark">Teacher remark (optional)</label><input id="teacherRemark" class="input-control full" placeholder="e.g., Explained the solution clearly">
+              <button type="button" class="btn btn-primary full rubric-save" id="saveRatingBtn" disabled>Select a rating to save</button>
             </div>
-            <div class="timer-box"><span>RESPONSE TIMER</span><strong id="timerDisplay">01:30</strong><div class="timer-controls"><button class="btn btn-soft" id="startTimerBtn">▶ Start</button><button class="btn btn-soft" id="resetTimerBtn">↺ Reset</button><select id="timerLength" class="select-control"><option value="60">1 minute</option><option value="90" selected>1 minute 30 sec</option><option value="120">2 minutes</option><option value="180">3 minutes</option></select></div></div>
-            <div class="rubric-grid">
-              <label>Content <select id="rubricContent" class="select-control"><option value="5">5 – Excellent</option><option value="4">4 – Very Good</option><option value="3" selected>3 – Satisfactory</option><option value="2">2 – Developing</option><option value="1">1 – Needs Support</option></select></label>
-              <label>Confidence <select id="rubricConfidence" class="select-control"><option value="5">5 – Excellent</option><option value="4">4 – Very Good</option><option value="3" selected>3 – Satisfactory</option><option value="2">2 – Developing</option><option value="1">1 – Needs Support</option></select></label>
-              <label>Participation <select id="rubricParticipation" class="select-control"><option value="5">5 – Excellent</option><option value="4">4 – Very Good</option><option value="3" selected>3 – Satisfactory</option><option value="2">2 – Developing</option><option value="1">1 – Needs Support</option></select></label>
-            </div>
-            <label class="field-label" for="teacherRemark">Teacher remark (optional)</label><input id="teacherRemark" class="input-control full" placeholder="e.g., Explained the solution clearly">
-            <div class="score-actions"><button class="score-btn correct" data-result="Correct">✓ Correct</button><button class="score-btn partial" data-result="Partial">½ Partial</button><button class="score-btn wrong" data-result="Wrong">✕ Incorrect</button></div>
             <div class="live-footer"><button class="btn btn-outline" id="skipStudentBtn">Skip Student</button><button class="btn btn-primary" id="nextStudentBtn">Next Student →</button></div>
-            <p class="small-note">Scoring saves a record immediately. Skipping does not add a score.</p>
+            <p class="small-note">Choose Oral Recitation or Boardwork, pick a rating from 1 to 5 (or press the number key), then save. Skipping does not add a score.</p>
           </article>
           <article class="panel wheel-panel">
             <div class="wheel-title"><span>✨</span> The Magic Wheel <span>✨</span></div>
@@ -179,10 +176,16 @@
       <section class="view" id="view-reports">
         <div class="section-intro"><div><h2>Reports & Analytics</h2><p>Export classroom records for teacher review and school documentation.</p></div></div>
         <div class="report-grid">
-          <article class="report-card"><div class="report-icon green">▦</div><h3>Recitation Masterlist</h3><p>Student totals, averages, and number of recitations.</p><button class="btn btn-outline full" id="exportRecitation">Export CSV / Excel</button></article>
+          <article class="report-card"><div class="report-icon green">▦</div><h3>Recitation Masterlist</h3><p>Oral and boardwork totals and averages per learner.</p><button class="btn btn-outline full" id="exportRecitation">Export CSV / Excel</button></article>
           <article class="report-card"><div class="report-icon blue">✓</div><h3>Attendance Summary</h3><p>Monthly attendance grid with P / A / L / E marks and totals per learner.</p><button class="btn btn-outline full" id="exportAttendance">Export CSV / Excel</button></article>
           <article class="report-card"><div class="report-icon purple">♙</div><h3>Individual Progress</h3><p>Choose a learner and download a printable summary.</p><select id="individualStudentSelect" class="select-control full"></select><button class="btn btn-outline full" id="exportIndividual">Download Student Report</button></article>
           <article class="report-card"><div class="report-icon yellow">♟</div><h3>Group Performance</h3><p>Current group points and membership.</p><button class="btn btn-outline full" id="exportGroups">Export Group Report</button></article>
+        </div>
+        <div class="panel rec-panel">
+          <div class="panel-heading"><div><h3>Recitation Record</h3><p>Who answered and how they scored (1–5), one column per class day, just like the attendance sheet.</p></div><div class="inline-actions"><button class="btn btn-outline" id="recPrint">⎙ Print</button><button class="btn btn-primary" id="recExport">⇩ Export Excel (CSV)</button></div></div>
+          <div class="toolbar"><select id="recClassSelect" class="select-control"></select><div class="gen-seg rec-tabs" id="recTabs"><button type="button" data-tab="oral">🎙 Oral</button><button type="button" data-tab="boardwork">📝 Boardwork</button><button type="button" data-tab="all">Combined</button></div><button class="btn btn-soft" id="recPrev" aria-label="Previous month">‹</button><input type="month" id="recMonth" class="input-control"><button class="btn btn-soft" id="recNext" aria-label="Next month">›</button><button class="btn btn-soft" id="recToday">This month</button></div>
+          <div class="att-legend"><span><b class="rt-5">5</b> Outstanding</span><span><b class="rt-4">4</b> Very Satisfactory</span><span><b class="rt-3">3</b> Satisfactory</span><span><b class="rt-2">2</b> Needs Improvement</span><span><b class="rt-1">1</b> Poor</span><span><b class="off"></b> No class</span><span class="muted" id="recHint"></span></div>
+          <div class="att-wrap" id="recGrid"><table class="att-grid" id="recTable"></table></div>
         </div>
         <div class="panel"><div class="panel-heading"><div><h3>Report preview</h3><p>Current class performance summary</p></div></div><div id="reportPreview" class="report-preview"></div></div>
       </section>
@@ -199,9 +202,11 @@
     </main>
   </div>
   <div class="att-menu" id="attMenu" hidden></div>
+  <div class="att-menu" id="recMenu" hidden></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <dialog id="simpleDialog" class="modal"><form method="dialog"><div class="modal-heading"><h3 id="dialogTitle">Add item</h3><button class="icon-button" value="cancel" aria-label="Close">×</button></div><div id="dialogBody"></div><div class="modal-actions"><button class="btn btn-outline" value="cancel">Cancel</button><button class="btn btn-primary" id="dialogSave" value="default">Save</button></div></form></dialog>
   <script src="app.js"></script>
   <script src="generator.js"></script>
+  <script src="recitation.js"></script>
 </body>
 </html>

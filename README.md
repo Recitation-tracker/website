@@ -35,3 +35,7 @@ Migrate local storage to IndexedDB, then implement a sync queue and Supabase bac
 ## Random Group Generator
 
 Open **Group Generator** from the sidebar. Group by size (3–6), by number of groups, or as random partners; pick a team-name theme; reveal members one by one; save groupings (the generator then avoids repeating teammates); export to Excel (.xlsx) or PDF. The module lives in `generator.js`.
+
+## Recitation scoring (Oral Recitation / Boardwork)
+
+On the Recitation page the learner's name is shown in the banner. Choose **Oral Recitation** or **Boardwork** to open its 5-point Likert rubric (5 Outstanding, 4 Very Satisfactory, 3 Satisfactory, 2 Needs Improvement, 1 Poor), pick a rating (or press 1-5), and save. Scores appear in **Reports > Recitation Record**, a monthly grid like the attendance sheet (tabs: Oral, Boardwork, Combined). Older records are converted to the 1-5 scale automatically. The code is in `recitation.js`.
