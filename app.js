@@ -123,12 +123,59 @@ function attGridKey(e){const td=e.target.closest(".att-cell");if(!td||td.dataset
   else if(k==="Escape")closeAttMenu();
 }
 function shiftMonth(n){const [y,m]=attMonth.split("-").map(Number);const d=new Date(y,m-1+n,1);attMonth=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");renderAttendance();}
-function fairPick(){const list=students().filter(s=>!todayRecords().some(r=>r.studentId===s.id));const candidates=list.length?list:students();if(!candidates.length){toast("Add students first.");return null;}const weights=candidates.map(s=>1/(1+recordsFor(s.id).length));const total=weights.reduce((a,b)=>a+b,0);let n=Math.random()*total;for(let i=0;i<candidates.length;i++){n-=weights[i];if(n<=0)return candidates[i];}return candidates[candidates.length-1];}
+/* ---------- Wheel of Names (random picker) ---------- */
+const WHEEL_COLORS=["#FF6B6B","#4ECDC4","#45B7D1","#96CEB4","#FFEAA7","#FF6B9D","#A29BFE","#6C5CE7"];
+let wheelAngle=0, wheelSpinning=false, wheelPool=[];
+function wheelLabel(name){const n=(name||"").trim();const m=n.match(/^([^,]+),\s*(\S+)/);const t=m?m[1].trim()+", "+m[2]:n.split(/\s+/).slice(0,2).join(" ");return t.length>22?t.slice(0,21)+"…":t;}
+function wheelCandidates(){const all=students();if(!$("wheelSkipDone").checked)return all;const done=new Set(todayRecords().map(r=>r.studentId));const left=all.filter(s=>!done.has(s.id));return left.length?left:all;}
+function drawWheel(){
+  const cv=$("wheelCanvas");if(!cv)return;const dpr=window.devicePixelRatio||1,S=440;
+  if(cv.width!==Math.round(S*dpr)){cv.width=cv.height=Math.round(S*dpr);}
+  const ctx=cv.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,S,S);
+  const cx=S/2,cy=S/2,R=S/2-16,n=wheelPool.length,TAU=Math.PI*2;
+  ctx.beginPath();ctx.arc(cx,cy,S/2-6,0,TAU);ctx.fillStyle="#fff";ctx.fill();ctx.lineWidth=9;ctx.strokeStyle="#d8c8ff";ctx.stroke();
+  if(!n){ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.fillStyle="#eef1f6";ctx.fill();ctx.fillStyle="#8a97aa";ctx.font="700 15px 'DM Sans',Arial,sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("Add students to this class",cx,cy);return;}
+  const seg=TAU/n;
+  wheelPool.forEach((s,i)=>{
+    const a0=wheelAngle+i*seg;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,a0,a0+seg);ctx.closePath();
+    let ci=i%WHEEL_COLORS.length;if(i===n-1&&n>1&&ci===0)ci=2;
+    ctx.fillStyle=WHEEL_COLORS[ci];ctx.fill();ctx.strokeStyle="rgba(255,255,255,.9)";ctx.lineWidth=1.5;ctx.stroke();
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(a0+seg/2);ctx.textAlign="right";ctx.textBaseline="middle";
+    const fs=Math.max(8,Math.min(15,R*.62*seg*.62));ctx.font=`700 ${fs}px 'DM Sans',Arial,sans-serif`;
+    ctx.fillStyle="#fff";ctx.shadowColor="rgba(0,0,0,.4)";ctx.shadowBlur=2;ctx.fillText(wheelLabel(s.name),R-12,0,R-56);ctx.restore();
+  });
+  ctx.beginPath();ctx.arc(cx,cy,24,0,TAU);ctx.fillStyle="#2d3748";ctx.fill();ctx.lineWidth=4;ctx.strokeStyle="#fff";ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx+R-16,cy);ctx.lineTo(S-3,cy-15);ctx.lineTo(S-3,cy+15);ctx.closePath();ctx.fillStyle="#e53e3e";ctx.fill();ctx.lineWidth=2;ctx.strokeStyle="#fff";ctx.stroke();
+}
+function pickWinnerIndex(pool){
+  if(!$("wheelFair").checked)return Math.floor(Math.random()*pool.length);
+  const weights=pool.map(s=>1/(1+recordsFor(s.id).length));const total=weights.reduce((a,b)=>a+b,0);let r=Math.random()*total;
+  for(let i=0;i<pool.length;i++){r-=weights[i];if(r<=0)return i;}return pool.length-1;
+}
+function spinWheel(){
+  if(wheelSpinning)return;
+  wheelPool=wheelCandidates();if(!wheelPool.length)return toast("Add students first.");
+  const n=wheelPool.length,seg=Math.PI*2/n,TAU=Math.PI*2,w=pickWinnerIndex(wheelPool);
+  const jitter=(Math.random()-.5)*.7;
+  const finalMod=((-(w+.5+jitter)*seg)%TAU+TAU)%TAU,startMod=((wheelAngle%TAU)+TAU)%TAU;
+  let delta=((finalMod-startMod)%TAU+TAU)%TAU;delta+=TAU*(5+Math.floor(Math.random()*3));
+  const start=wheelAngle,dur=4800+Math.random()*800,t0=performance.now(),winner=wheelPool[w];
+  wheelSpinning=true;$("spinWheelBtn").disabled=true;$("wheelSkipDone").disabled=$("wheelFair").disabled=true;$("winnerCard").hidden=true;
+  const step=now=>{const t=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-t,4);wheelAngle=start+delta*e;drawWheel();
+    if(t<1)requestAnimationFrame(step);
+    else{wheelAngle=start+delta;wheelSpinning=false;$("spinWheelBtn").disabled=false;$("wheelSkipDone").disabled=$("wheelFair").disabled=false;finishSpin(winner);}};
+  requestAnimationFrame(step);
+}
+function finishSpin(s){
+  chooseStudent(s);resetTimer();
+  $("winnerName").textContent=s.name;$("winnerTime").textContent="Selected at "+new Date().toLocaleTimeString();
+  const card=$("winnerCard");card.hidden=false;card.classList.remove("pop");void card.offsetWidth;card.classList.add("pop");
+}
 function chooseStudent(s){if(!s)return;currentStudentId=s.id;$("currentStudentName").textContent=s.name;$("currentAvatar").textContent=initials(s.name);$("currentStudentMeta").textContent=`Seat ${s.seat} · Group ${s.group||"Unassigned"} · ${recordsFor(s.id).length} previous recitations`;renderQueue();}
-function renderRecitation(){populateClassSelects();$("sessionDate").textContent=new Date().toLocaleDateString();if(currentStudentId&&!students().some(s=>s.id===currentStudentId))currentStudentId=null;if(currentStudentId){const s=students().find(x=>x.id===currentStudentId);if(s)chooseStudent(s);}else{$("currentStudentName").textContent="Choose a student";$("currentAvatar").textContent="?";$("currentStudentMeta").textContent="Use Random Picker to begin.";}renderQueue();resetTimer();}
-function renderQueue(){const list=students();const rec=todayRecords();const done=new Set(rec.map(r=>r.studentId));let shown=list.filter(s=>queueFilter==="all"||(queueFilter==="done"?done.has(s.id):!done.has(s.id)));$("queueCount").textContent=shown.length;$("queueSummary").textContent=`${done.size} recited · ${list.length-done.size} waiting today`;$("studentQueue").innerHTML=shown.map(s=>{const rs=recordsFor(s.id);const isDone=done.has(s.id);return `<div class="queue-row ${s.id===currentStudentId?"selected":""}" data-queue-student="${s.id}"><span class="student-avatar">${initials(s.name)}</span><div class="queue-info"><strong>${escapeHTML(s.name)}</strong><small>Seat ${s.seat} · ${rs.length} total recitations</small></div><span class="pill ${isDone?"green":"yellow"}">${isDone?"Done":"Waiting"}</span></div>`}).join("")||`<div class="empty-state">No students in this filter.</div>`;}
+function renderRecitation(){populateClassSelects();$("wheelSkipDone").checked=data.settings.wheelSkipDone!==false;$("wheelFair").checked=data.settings.wheelFair!==false;$("sessionDate").textContent=new Date().toLocaleDateString();if(currentStudentId&&!students().some(s=>s.id===currentStudentId))currentStudentId=null;if(currentStudentId){const s=students().find(x=>x.id===currentStudentId);if(s)chooseStudent(s);}else{$("currentStudentName").textContent="Choose a student";$("currentAvatar").textContent="?";$("currentStudentMeta").textContent="Use Random Picker to begin.";}if(!currentStudentId)$("winnerCard").hidden=true;renderQueue();resetTimer();}
+function renderQueue(){if(!$("wheelCanvas"))return;if(!wheelSpinning)wheelPool=wheelCandidates();const list=students(),done=new Set(todayRecords().map(r=>r.studentId));$("wheelSummary").textContent=`${done.size} recited · ${list.length-done.size} waiting today · ${wheelPool.length} on the wheel`;drawWheel();}
 function recordScore(result){const s=students().find(x=>x.id===currentStudentId);if(!s)return toast("Pick a student first.");const content=+$("rubricContent").value,confidence=+$("rubricConfidence").value,participation=+$("rubricParticipation").value;const rubricAvg=(content+confidence+participation)/3;const base={Correct:10,Partial:6,Wrong:2}[result];const score=Math.max(0,Math.min(10,Math.round((base*.7+rubricAvg*2)*10)/10));data.records.push({id:uid(),classId:activeClass().id,studentId:s.id,date:todayISO(),result,score,content,confidence,participation,remark:$("teacherRemark").value.trim(),createdAt:new Date().toISOString()});save();$("teacherRemark").value="";toast(`${result} recorded for ${s.name}: ${score}/10`);renderQueue();renderDashboard();}
-function nextStudent(){const s=fairPick();if(s)chooseStudent(s);else toast("No students available.");}
+function nextStudent(){spinWheel();}
 function startTimer(){if(timerInterval)return;timerInterval=setInterval(()=>{timerSeconds=Math.max(0,timerSeconds-1);updateTimer();if(timerSeconds===0){clearInterval(timerInterval);timerInterval=null;toast("Time is up.");}},1000);$("startTimerBtn").textContent="Ⅱ Pause";}
 function pauseTimer(){clearInterval(timerInterval);timerInterval=null;$("startTimerBtn").textContent="▶ Start";}
 function resetTimer(){pauseTimer();timerSeconds=+$("timerLength").value||90;updateTimer();}
@@ -168,8 +215,8 @@ function bindEvents(){
 
 
  $("randomPickerBtn").onclick=nextStudent;$("nextStudentBtn").onclick=nextStudent;$("skipStudentBtn").onclick=()=>{if(!currentStudentId)return toast("Pick a student first.");toast("Student skipped without a score.");nextStudent();};
- $("studentQueue").addEventListener("click",e=>{const row=e.target.closest("[data-queue-student]");if(row)chooseStudent(students().find(s=>s.id===row.dataset.queueStudent));});
- document.querySelectorAll(".filter").forEach(b=>b.onclick=()=>{queueFilter=b.dataset.filter;document.querySelectorAll(".filter").forEach(x=>x.classList.toggle("active",x===b));renderQueue();});
+ $("spinWheelBtn").onclick=spinWheel;["wheelSkipDone","wheelFair"].forEach(id=>$(id).onchange=()=>{data.settings[id]=$(id).checked;save();renderQueue();});
+
  document.querySelectorAll(".score-btn").forEach(b=>b.onclick=()=>recordScore(b.dataset.result));
  $("startTimerBtn").onclick=()=>timerInterval?pauseTimer():startTimer();$("resetTimerBtn").onclick=resetTimer;$("timerLength").onchange=resetTimer;
  $("groupGrid").addEventListener("click",e=>{const add=e.target.closest("[data-group-add]"),sub=e.target.closest("[data-group-sub]");if(!add&&!sub)return;const g=data.groups.find(x=>x.id===+(add?.dataset.groupAdd||sub.dataset.groupSub));g.points=Math.max(0,g.points+(add?10:-5));save();renderGroups();renderDashboard();toast("Group points updated.");});

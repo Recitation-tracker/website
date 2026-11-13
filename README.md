@@ -10,7 +10,7 @@
 - Responsive teacher dashboard for laptop and mobile
 - Class/section management
 - Spreadsheet-style monthly attendance grid (learners as rows, school days as columns; P / A / L / E marks, no-class days, monthly totals, CSV export and printing)
-- Fairness-aware random student picker
+- "Magic Wheel" random picker for recitation (animated name wheel with optional fairness weighting and skip-already-recited)
 - Live recitation timer and rubric inputs
 - Correct / Partial / Incorrect scoring
 - Group points

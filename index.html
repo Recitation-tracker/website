@@ -107,7 +107,21 @@
             <div class="live-footer"><button class="btn btn-outline" id="skipStudentBtn">Skip Student</button><button class="btn btn-primary" id="nextStudentBtn">Next Student →</button></div>
             <p class="small-note">Scoring saves a record immediately. Skipping does not add a score.</p>
           </article>
-          <article class="panel waiting-panel"><div class="panel-heading"><div><h3>Student Queue</h3><p id="queueSummary">Waiting students</p></div><span class="queue-count" id="queueCount">0</span></div><div class="queue-filters"><button class="filter active" data-filter="all">All</button><button class="filter" data-filter="waiting">Waiting</button><button class="filter" data-filter="done">Done</button></div><div id="studentQueue" class="student-queue"></div></article>
+          <article class="panel wheel-panel">
+            <div class="wheel-title"><span>✨</span> The Magic Wheel <span>✨</span></div>
+            <p class="wheel-summary" id="wheelSummary"></p>
+            <div class="wheel-stage"><canvas id="wheelCanvas" width="440" height="440" role="img" aria-label="Wheel of student names"></canvas></div>
+            <button class="spin-btn" id="spinWheelBtn">▷ SPIN THE WHEEL!</button>
+            <div class="wheel-options">
+              <label><input type="checkbox" id="wheelSkipDone" checked> Skip learners who already recited today</label>
+              <label><input type="checkbox" id="wheelFair" checked> Fair chance: learners with fewer recitations are more likely to be picked</label>
+            </div>
+            <div class="winner-card" id="winnerCard" hidden>
+              <div class="winner-title">👑 WINNER! 👑</div>
+              <div class="winner-name" id="winnerName"></div>
+              <small id="winnerTime"></small>
+            </div>
+          </article>
         </div>
       </section>
 
