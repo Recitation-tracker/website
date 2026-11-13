@@ -61,3 +61,51 @@ table.att-grid{width:auto;border-collapse:separate;border-spacing:0;white-space:
 .winner-card small{font-size:10px;color:#9a7a3a}
 .winner-card.pop{animation:winnerPop .55s cubic-bezier(.2,1.4,.4,1)}
 @keyframes winnerPop{0%{transform:scale(.85);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* ---------- Random Group Generator ---------- */
+.gen-layout{display:grid;grid-template-columns:minmax(300px,360px) minmax(0,1fr);gap:16px;align-items:start;margin-bottom:16px}
+.gen-setup h3{font:800 14px Manrope,sans-serif;margin:0 0 12px}.gen-setup h3:not(:first-child){margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.gen-seg{display:grid;grid-template-columns:repeat(3,1fr);background:#eef2f8;border-radius:10px;padding:4px;gap:4px}
+.gen-seg button{border:0;background:transparent;border-radius:7px;padding:9px 4px;font:700 11px 'DM Sans',Arial,sans-serif;color:#5d6e88;cursor:pointer}
+.gen-seg button.active{background:#fff;color:var(--navy);box-shadow:0 2px 8px rgba(22,45,82,.12)}
+.gen-chips{display:flex;gap:8px}.gen-chips button{flex:1;border:1px solid #d5deec;background:#fff;border-radius:10px;padding:12px 0;font:800 17px Manrope,sans-serif;color:#36496b;cursor:pointer}
+.gen-chips button.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.gen-stepper{display:flex;gap:8px}.gen-stepper button{width:42px;border:1px solid #d5deec;background:#fff;border-radius:10px;font:800 18px Manrope,sans-serif;color:var(--navy);cursor:pointer}
+.gen-stepper input{flex:1;text-align:center;font:800 17px Manrope,sans-serif;padding:9px}
+.gen-hint{font-size:11px;color:#65748c;line-height:1.5;background:#f4f7fc;border-radius:9px;padding:11px;margin:14px 0 0}
+.gen-preview{margin-top:14px;background:#f2f6ff;border-left:3px solid #3e72d2;border-radius:6px;padding:10px 12px;font-size:12px;color:#445a82}.gen-preview span{color:#7384a3}
+.gen-opts{margin-top:12px}.gen-opts small{display:block;color:#8a97aa;font-size:10px;margin-top:2px}
+.gen-pool{display:flex;flex-wrap:wrap;gap:6px;max-height:170px;overflow:auto;padding:2px}
+.gen-chip{border:1px solid #d5deec;background:#fff;color:#2e4468;border-radius:20px;padding:5px 10px;font:600 10px 'DM Sans',Arial,sans-serif;cursor:pointer}
+.gen-chip.off{background:#f1f3f7;color:#a2adbf;text-decoration:line-through}
+.gen-chip.absent{background:#ffeef0;border-color:#ffd0d4;color:#c22e3c;cursor:not-allowed}
+.gen-link{border:0;background:none;color:var(--navy);font:700 11px 'DM Sans',Arial,sans-serif;cursor:pointer;padding:8px 0 0;text-decoration:underline}
+.gen-go{width:100%;margin:18px 0 0}
+.gen-banner{display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,#f3e8ff,#ffe4f1);border:1px solid #e7c9f5;color:#6b21a8;border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:13px}
+.gen-banner[hidden]{display:none}.gen-banner em{font-style:normal;font-weight:800;color:#c026d3;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gen-spin{display:inline-block;animation:genSpin .6s linear infinite}@keyframes genSpin{to{transform:rotate(360deg)}}
+.gen-results{min-height:340px}
+.gen-empty{text-align:center;padding:70px 20px;color:#7a89a1}.gen-empty h3{font:800 18px Manrope,sans-serif;color:var(--ink);margin:8px 0}.gen-empty-dice{font-size:54px}
+.gen-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}.gen-head h3{font:800 17px Manrope,sans-serif;margin:0 0 4px}.gen-head p{margin:0}.gen-badges{display:flex;gap:6px;flex-wrap:wrap}.gen-badges .pill{font-size:10px;padding:6px 10px}
+.gen-actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.gen-actions .input-control{flex:1;min-width:180px}
+.gen-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:14px}
+.gen-card{border:1px solid var(--line);border-top:4px solid var(--c);border-radius:12px;background:#fff;box-shadow:var(--shadow);overflow:hidden}
+.gen-card header{display:flex;align-items:center;gap:4px;padding:10px 10px 8px;background:color-mix(in srgb,var(--c) 9%,#fff)}
+.gen-name{flex:1;min-width:0;border:1px solid transparent;background:transparent;font:800 14px Manrope,sans-serif;color:var(--c);padding:5px 6px;border-radius:7px;outline:none}
+.gen-name:hover{border-color:#dbe3ef}.gen-name:focus{border-color:var(--c);background:#fff}
+.gen-dice{border:0;background:#fff;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:14px;box-shadow:0 1px 4px rgba(22,45,82,.12)}.gen-dice:hover{transform:rotate(25deg)}
+.gen-card ol{list-style:none;margin:0;padding:6px 10px}
+.gen-card li{display:flex;align-items:center;gap:9px;padding:7px 2px;border-bottom:1px solid #f0f2f6;font-size:12px;font-weight:600;transition:opacity .25s,transform .25s}
+.gen-card li:last-child{border-bottom:0}
+.gen-card li .no{width:20px;height:20px;border-radius:50%;background:color-mix(in srgb,var(--c) 14%,#fff);color:var(--c);display:grid;place-items:center;font-size:10px;font-weight:800;flex:none}
+.gen-card li .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gen-card li .rep{font-style:normal;color:#b45309;font-weight:800;cursor:help}
+.gen-card li.hid{opacity:0;transform:scale(.85)}
+.gen-card li.pop{animation:genPop .4s cubic-bezier(.2,1.5,.4,1)}@keyframes genPop{0%{transform:scale(.6);background:#fff4c2}100%{transform:scale(1);background:transparent}}
+.gen-card footer{padding:7px 12px;font-size:10px;color:#8794a9;background:#f9fafc;border-top:1px solid #f0f2f6}
+.gen-saved-row{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid #f0f2f6}.gen-saved-row:last-child{border-bottom:0}
+.gen-saved-info{min-width:0}.gen-saved-info strong{display:block;font-size:13px}.gen-saved-info small{color:var(--muted);font-size:10px}
+.gen-minis{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}.gen-mini{font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;color:var(--c);background:color-mix(in srgb,var(--c) 11%,#fff)}
+.gen-saved-btns{display:flex;gap:6px;flex:none}
+@media(max-width:1100px){.gen-layout{grid-template-columns:1fr}}
+@media(max-width:760px){.gen-saved-row{flex-direction:column;align-items:flex-start}.gen-saved-btns{flex-wrap:wrap}}

@@ -31,3 +31,7 @@ This is a front-end prototype, not a production school information system.
 
 ## Suggested next development stage
 Migrate local storage to IndexedDB, then implement a sync queue and Supabase backend. Keep local saves immediate and synchronize in the background when connectivity returns.
+
+## Random Group Generator
+
+Open **Group Generator** from the sidebar. Group by size (3–6), by number of groups, or as random partners; pick a team-name theme; reveal members one by one; save groupings (the generator then avoids repeating teammates); export to Excel (.xlsx) or PDF. The module lives in `generator.js`.

@@ -21,6 +21,7 @@
         <button class="nav-link" data-view="attendance"><span>✓</span> Attendance</button>
         <button class="nav-link" data-view="recitation"><span>🎙</span> Recitation</button>
         <button class="nav-link" data-view="groups"><span>♟</span> Group Activity</button>
+        <button class="nav-link" data-view="generator"><span>🎲</span> Group Generator</button>
         <button class="nav-link" data-view="students"><span>♙</span> Students</button>
         <button class="nav-link" data-view="reports"><span>▤</span> Reports</button>
         <button class="nav-link" data-view="settings"><span>⚙</span> Settings & Backup</button>
@@ -131,6 +132,44 @@
         <div class="panel group-turn"><div><span class="eyebrow">GROUP ACTIVITY TIP</span><h3>Reward teamwork, not only speed.</h3><p>Give points for clear explanations, shared participation, and helping classmates understand a solution.</p></div><button class="btn btn-outline" id="randomGroupStudent">Pick Group Member</button></div>
       </section>
 
+      <section class="view" id="view-generator">
+        <div class="section-intro"><div><h2>Random Group Generator</h2><p>Make fair, fresh teams in seconds: by group size, number of groups, or random partners.</p></div><div class="inline-actions"><select id="generatorClassSelect" class="select-control"></select></div></div>
+        <div class="gen-layout">
+          <aside class="panel gen-setup">
+            <h3>1 · How should we group?</h3>
+            <div class="gen-seg" id="genMode"><button type="button" data-mode="size">Group size</button><button type="button" data-mode="count">No. of groups</button><button type="button" data-mode="pairs">Partners</button></div>
+            <div class="gen-field" id="genSizeField"><label class="field-label">Members per group</label><div class="gen-chips" id="genSizeChips"><button type="button" data-size="3">3</button><button type="button" data-size="4">4</button><button type="button" data-size="5">5</button><button type="button" data-size="6">6</button></div></div>
+            <div class="gen-field" id="genCountField" hidden><label class="field-label">Number of groups</label><div class="gen-stepper"><button type="button" id="genCountMinus" aria-label="Fewer groups">−</button><input type="number" id="genCount" min="2" max="30" class="input-control"><button type="button" id="genCountPlus" aria-label="More groups">+</button></div></div>
+            <p class="gen-hint" id="genPairsHint" hidden>Learners are paired up. If the class has an odd number, one pair becomes a trio.</p>
+            <div class="gen-preview" id="genPreview"></div>
+
+            <h3>2 · Options</h3>
+            <label class="field-label" for="genTheme">Team name theme</label>
+            <select id="genTheme" class="select-control full"></select>
+            <div class="wheel-options gen-opts">
+              <label><input type="checkbox" id="genAvoid"> <span>Avoid repeating past groupings<small id="genAvoidNote"></small></span></label>
+              <label><input type="checkbox" id="genSkipAbsent"> <span>Leave out learners marked absent today</span></label>
+              <label><input type="checkbox" id="genAnimate"> <span>Shuffle &amp; reveal one by one</span></label>
+            </div>
+
+            <h3>3 · Who is in?</h3>
+            <p class="muted" id="genPoolNote"></p>
+            <div class="gen-pool" id="genPool"></div>
+            <button type="button" class="gen-link" id="genPoolAll">Include everyone</button>
+
+            <button type="button" class="spin-btn gen-go" id="genGo">🎲 GENERATE GROUPS</button>
+          </aside>
+          <div class="gen-main">
+            <div class="gen-banner" id="genBanner" hidden></div>
+            <div class="panel gen-results" id="genResults"></div>
+          </div>
+        </div>
+        <div class="panel gen-saved">
+          <div class="panel-heading"><div><h3>Saved groupings</h3><p>Saved groupings are remembered so new teams avoid repeating the same teammates.</p></div><button class="btn btn-danger" id="genClearAll" hidden>Clear all</button></div>
+          <div id="genSaved"></div>
+        </div>
+      </section>
+
       <section class="view" id="view-students">
         <div class="section-intro"><div><h2>Student Records</h2><p>Search learners and review their participation history.</p></div><button class="btn btn-primary" id="addStudentBtn">＋ Add Student</button></div>
         <div class="toolbar"><select id="studentsClassSelect" class="select-control"></select><input id="studentSearch" class="input-control search-input" placeholder="Search student name..."></div>
@@ -163,5 +202,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <dialog id="simpleDialog" class="modal"><form method="dialog"><div class="modal-heading"><h3 id="dialogTitle">Add item</h3><button class="icon-button" value="cancel" aria-label="Close">×</button></div><div id="dialogBody"></div><div class="modal-actions"><button class="btn btn-outline" value="cancel">Cancel</button><button class="btn btn-primary" id="dialogSave" value="default">Save</button></div></form></dialog>
   <script src="app.js"></script>
+  <script src="generator.js"></script>
 </body>
 </html>
