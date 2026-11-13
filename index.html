@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#123f91">
+  <title>Recitation Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">★</div>
+        <div><strong>Recitation Tracker</strong><small>Teacher Workspace</small></div>
+      </div>
+      <div class="school-label">ALCANTARA NHS · GEN MATH 11</div>
+      <nav class="nav-menu" aria-label="Main navigation">
+        <button class="nav-link active" data-view="dashboard"><span>▦</span> Dashboard</button>
+        <button class="nav-link" data-view="classes"><span>▣</span> My Classes</button>
+        <button class="nav-link" data-view="attendance"><span>✓</span> Attendance</button>
+        <button class="nav-link" data-view="recitation"><span>🎙</span> Recitation</button>
+        <button class="nav-link" data-view="groups"><span>♟</span> Group Activity</button>
+        <button class="nav-link" data-view="students"><span>♙</span> Students</button>
+        <button class="nav-link" data-view="reports"><span>▤</span> Reports</button>
+        <button class="nav-link" data-view="settings"><span>⚙</span> Settings & Backup</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <span class="status-dot"></span><span id="connectionLabel">Offline-ready · Saved on this device</span>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobileMenu" aria-label="Open menu">☰</button>
+        <div>
+          <div class="eyebrow">TEACHER WORKSPACE</div>
+          <h1 id="pageTitle">Dashboard</h1>
+        </div>
+        <div class="top-actions">
+          <span class="date-chip" id="todayLabel"></span>
+          <button class="icon-button" id="exportQuick" title="Export class records">⇩</button>
+          <div class="teacher-avatar" title="Teacher">T</div>
+        </div>
+      </header>
+
+      <section class="view active" id="view-dashboard">
+        <div class="welcome-row">
+          <div><h2>Good day, Teacher!</h2><p>Here is your classroom participation overview.</p></div>
+          <button class="btn btn-primary" data-go="recitation">＋ Start Recitation</button>
+        </div>
+        <div class="stats-grid">
+          <article class="stat-card"><div class="stat-icon blue">♙</div><div><span>Total Students</span><strong id="statStudents">0</strong><small>In selected class</small></div></article>
+          <article class="stat-card"><div class="stat-icon yellow">✓</div><div><span>Recited Today</span><strong id="statRecited">0</strong><small id="statWaiting">0 waiting</small></div></article>
+          <article class="stat-card"><div class="stat-icon green">★</div><div><span>Average Score</span><strong id="statAverage">—</strong><small>Recorded recitations</small></div></article>
+          <article class="stat-card"><div class="stat-icon purple">♟</div><div><span>Top Group</span><strong id="statTopGroup">—</strong><small>By group points</small></div></article>
+        </div>
+        <div class="content-grid">
+          <article class="panel">
+            <div class="panel-heading"><div><h3>Class Leaderboard</h3><p>Participation and recitation records</p></div><select id="dashboardClassSelect" class="select-control"></select></div>
+            <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Student</th><th>Score</th><th>Recitations</th><th>Status</th></tr></thead><tbody id="leaderboardBody"></tbody></table></div>
+          </article>
+          <article class="panel">
+            <div class="panel-heading"><div><h3>Participation Balance</h3><p>Students who still need an opportunity</p></div></div>
+            <div class="balance-number" id="balancePercent">0%</div>
+            <div class="progress-track"><div class="progress-fill" id="balanceBar"></div></div>
+            <div class="mini-stats"><div><strong id="neverRecited">0</strong><span>Never recited</span></div><div><strong id="lowParticipation">0</strong><span>1–2 recitations</span></div></div>
+            <div class="callout">Use the fairness-aware picker to give students with fewer recent opportunities a higher chance of being selected.</div>
+            <button class="btn btn-outline full" data-go="recitation">Open Fair Picker →</button>
+          </article>
+        </div>
+        <article class="panel">
+          <div class="panel-heading"><div><h3>Recent Classroom Activity</h3><p>Latest saved records on this device</p></div></div>
+          <div id="recentActivity" class="activity-list"></div>
+        </article>
+      </section>
+
+      <section class="view" id="view-classes">
+        <div class="section-intro"><div><h2>My Classes</h2><p>Manage your sections and select the active class.</p></div><button class="btn btn-primary" id="addClassBtn">＋ Add Class</button></div>
+        <div class="class-grid" id="classGrid"></div>
+      </section>
+
+      <section class="view" id="view-attendance">
+        <div class="section-intro"><div><h2>Attendance</h2><p>Mark attendance quickly. Records are saved locally.</p></div><div class="inline-actions"><input type="date" id="attendanceDate" class="input-control"><button class="btn btn-primary" id="saveAttendanceBtn">Save Attendance</button></div></div>
+        <div class="toolbar"><select id="attendanceClassSelect" class="select-control"></select><button class="btn btn-soft" id="markAllPresent">Mark All Present</button><span class="muted" id="attendanceCount"></span></div>
+        <div class="panel table-wrap"><table><thead><tr><th>Student</th><th>Seat</th><th>Attendance status</th><th>Note (optional)</th></tr></thead><tbody id="attendanceBody"></tbody></table></div>
+      </section>
+
+      <section class="view" id="view-recitation">
+        <div class="section-intro"><div><h2>Live Recitation</h2><p>Pick fairly, assess quickly, and save every response.</p></div><div class="inline-actions"><select id="recitationClassSelect" class="select-control"></select><button class="btn btn-outline" id="randomPickerBtn">⤨ Random Picker</button></div></div>
+        <div class="recitation-layout">
+          <article class="panel live-panel">
+            <div class="live-top"><span class="live-badge"><i></i> LIVE SESSION</span><span class="muted" id="sessionDate"></span></div>
+            <div class="current-student">
+              <div class="student-avatar large" id="currentAvatar">?</div>
+              <div><span class="eyebrow">CURRENT STUDENT</span><h2 id="currentStudentName">Choose a student</h2><p id="currentStudentMeta">Use Random Picker to begin.</p></div>
+            </div>
+            <div class="timer-box"><span>RESPONSE TIMER</span><strong id="timerDisplay">01:30</strong><div class="timer-controls"><button class="btn btn-soft" id="startTimerBtn">▶ Start</button><button class="btn btn-soft" id="resetTimerBtn">↺ Reset</button><select id="timerLength" class="select-control"><option value="60">1 minute</option><option value="90" selected>1 minute 30 sec</option><option value="120">2 minutes</option><option value="180">3 minutes</option></select></div></div>
+            <div class="rubric-grid">
+              <label>Content <select id="rubricContent" class="select-control"><option value="5">5 – Excellent</option><option value="4">4 – Very Good</option><option value="3" selected>3 – Satisfactory</option><option value="2">2 – Developing</option><option value="1">1 – Needs Support</option></select></label>
+              <label>Confidence <select id="rubricConfidence" class="select-control"><option value="5">5 – Excellent</option><option value="4">4 – Very Good</option><option value="3" selected>3 – Satisfactory</option><option value="2">2 – Developing</option><option value="1">1 – Needs Support</option></select></label>
+              <label>Participation <select id="rubricParticipation" class="select-control"><option value="5">5 – Excellent</option><option value="4">4 – Very Good</option><option value="3" selected>3 – Satisfactory</option><option value="2">2 – Developing</option><option value="1">1 – Needs Support</option></select></label>
+            </div>
+            <label class="field-label" for="teacherRemark">Teacher remark (optional)</label><input id="teacherRemark" class="input-control full" placeholder="e.g., Explained the solution clearly">
+            <div class="score-actions"><button class="score-btn correct" data-result="Correct">✓ Correct</button><button class="score-btn partial" data-result="Partial">½ Partial</button><button class="score-btn wrong" data-result="Wrong">✕ Incorrect</button></div>
+            <div class="live-footer"><button class="btn btn-outline" id="skipStudentBtn">Skip Student</button><button class="btn btn-primary" id="nextStudentBtn">Next Student →</button></div>
+            <p class="small-note">Scoring saves a record immediately. Skipping does not add a score.</p>
+          </article>
+          <article class="panel waiting-panel"><div class="panel-heading"><div><h3>Student Queue</h3><p id="queueSummary">Waiting students</p></div><span class="queue-count" id="queueCount">0</span></div><div class="queue-filters"><button class="filter active" data-filter="all">All</button><button class="filter" data-filter="waiting">Waiting</button><button class="filter" data-filter="done">Done</button></div><div id="studentQueue" class="student-queue"></div></article>
+        </div>
+      </section>
+
+      <section class="view" id="view-groups">
+        <div class="section-intro"><div><h2>Group Activity</h2><p>Track team points and encourage collaboration.</p></div><button class="btn btn-primary" id="resetGroupPoints">Reset Points</button></div>
+        <div class="group-grid" id="groupGrid"></div>
+        <div class="panel group-turn"><div><span class="eyebrow">GROUP ACTIVITY TIP</span><h3>Reward teamwork, not only speed.</h3><p>Give points for clear explanations, shared participation, and helping classmates understand a solution.</p></div><button class="btn btn-outline" id="randomGroupStudent">Pick Group Member</button></div>
+      </section>
+
+      <section class="view" id="view-students">
+        <div class="section-intro"><div><h2>Student Records</h2><p>Search learners and review their participation history.</p></div><button class="btn btn-primary" id="addStudentBtn">＋ Add Student</button></div>
+        <div class="toolbar"><select id="studentsClassSelect" class="select-control"></select><input id="studentSearch" class="input-control search-input" placeholder="Search student name..."></div>
+        <div class="panel table-wrap"><table><thead><tr><th>Student</th><th>Seat</th><th>Group</th><th>Recitations</th><th>Average</th><th>Action</th></tr></thead><tbody id="studentsBody"></tbody></table></div>
+      </section>
+
+      <section class="view" id="view-reports">
+        <div class="section-intro"><div><h2>Reports & Analytics</h2><p>Export classroom records for teacher review and school documentation.</p></div></div>
+        <div class="report-grid">
+          <article class="report-card"><div class="report-icon green">▦</div><h3>Recitation Masterlist</h3><p>Student totals, averages, and number of recitations.</p><button class="btn btn-outline full" id="exportRecitation">Export CSV / Excel</button></article>
+          <article class="report-card"><div class="report-icon blue">✓</div><h3>Attendance Summary</h3><p>Present, absent, late, and excused records by date.</p><button class="btn btn-outline full" id="exportAttendance">Export CSV / Excel</button></article>
+          <article class="report-card"><div class="report-icon purple">♙</div><h3>Individual Progress</h3><p>Choose a learner and download a printable summary.</p><select id="individualStudentSelect" class="select-control full"></select><button class="btn btn-outline full" id="exportIndividual">Download Student Report</button></article>
+          <article class="report-card"><div class="report-icon yellow">♟</div><h3>Group Performance</h3><p>Current group points and membership.</p><button class="btn btn-outline full" id="exportGroups">Export Group Report</button></article>
+        </div>
+        <div class="panel"><div class="panel-heading"><div><h3>Report preview</h3><p>Current class performance summary</p></div></div><div id="reportPreview" class="report-preview"></div></div>
+      </section>
+
+      <section class="view" id="view-settings">
+        <div class="section-intro"><div><h2>Settings & Backup</h2><p>Manage local data and protect your classroom records.</p></div></div>
+        <div class="settings-grid">
+          <article class="panel"><h3>Classroom Settings</h3><label class="field-label">Teacher name</label><input id="teacherName" class="input-control full" placeholder="Enter teacher name"><label class="field-label">School name</label><input id="schoolName" class="input-control full" placeholder="School name"><button class="btn btn-primary" id="saveSettings">Save Settings</button></article>
+          <article class="panel"><h3>Data Backup</h3><p class="muted">Export a JSON backup to keep a copy of your classes, students, attendance, scores, and group points.</p><button class="btn btn-outline full" id="backupBtn">⇩ Download Full Backup</button><label class="field-label" for="restoreFile">Restore from backup</label><input type="file" id="restoreFile" accept=".json,application/json" class="input-control full"><button class="btn btn-outline full" id="restoreBtn">Restore Backup</button></article>
+          <article class="panel danger-panel"><h3>Reset Local Data</h3><p class="muted">This removes records stored in this browser. Download a backup first.</p><button class="btn btn-danger" id="resetAppBtn">Reset Demo Data</button></article>
+        </div>
+        <div class="privacy-note"><strong>Privacy reminder:</strong> This starter version stores information in the current browser on this device. It does not yet provide teacher accounts, cloud synchronization, or multi-device sharing. Use fictional student names while testing.</div>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog id="simpleDialog" class="modal"><form method="dialog"><div class="modal-heading"><h3 id="dialogTitle">Add item</h3><button class="icon-button" value="cancel" aria-label="Close">×</button></div><div id="dialogBody"></div><div class="modal-actions"><button class="btn btn-outline" value="cancel">Cancel</button><button class="btn btn-primary" id="dialogSave" value="default">Save</button></div></form></dialog>
+  <script src="app.js"></script>
+</body>
+</html>
