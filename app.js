@@ -26,6 +26,8 @@ let currentStudentId=null, queueFilter="all", timerSeconds=90, timerInterval=nul
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
 function activeClass(){return data.classes.find(c=>c.id===data.activeClassId)||data.classes[0];}
 function students(){return activeClass()?.students||[];}
+/* sound hook: safe no-op until sounds.js has loaded */
+function sfx(n,arg){if(window.SFX)SFX.play(n,arg);}
 /* ---------- Recitation rubrics (5-point Likert) ---------- */
 const REC_LEVELS={5:"Outstanding",4:"Very Satisfactory",3:"Satisfactory",2:"Needs Improvement",1:"Poor"};
 const REC_RUBRICS={
@@ -184,7 +186,7 @@ function spinWheel(){
   const finalMod=((-(w+.5+jitter)*seg)%TAU+TAU)%TAU,startMod=((wheelAngle%TAU)+TAU)%TAU;
   let delta=((finalMod-startMod)%TAU+TAU)%TAU;delta+=TAU*(5+Math.floor(Math.random()*3));
   const start=wheelAngle,dur=4800+Math.random()*800,t0=performance.now(),winner=wheelPool[w];
-  wheelSpinning=true;$("spinWheelBtn").disabled=true;$("wheelSkipDone").disabled=$("wheelFair").disabled=true;$("winnerCard").hidden=true;
+  wheelSpinning=true;sfx("spinStart");$("spinWheelBtn").disabled=true;$("wheelSkipDone").disabled=$("wheelFair").disabled=true;$("winnerCard").hidden=true;
   const step=now=>{const t=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-t,4);wheelAngle=start+delta*e;drawWheel();
     if(t<1)requestAnimationFrame(step);
     else{wheelAngle=start+delta;wheelSpinning=false;$("spinWheelBtn").disabled=false;$("wheelSkipDone").disabled=$("wheelFair").disabled=false;finishSpin(winner);}};

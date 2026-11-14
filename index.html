@@ -40,6 +40,7 @@
         </div>
         <div class="top-actions">
           <span class="date-chip" id="todayLabel"></span>
+          <button class="icon-button" id="soundToggle" title="Sounds on (click to mute)" aria-pressed="true" aria-label="Toggle sounds">🔊</button>
           <button class="icon-button" id="exportQuick" title="Export class records">⇩</button>
           <div class="teacher-avatar" title="Teacher">T</div>
         </div>
@@ -195,6 +196,12 @@
         <div class="settings-grid">
           <article class="panel"><h3>Classroom Settings</h3><label class="field-label">Teacher name</label><input id="teacherName" class="input-control full" placeholder="Enter teacher name"><label class="field-label">School name</label><input id="schoolName" class="input-control full" placeholder="School name"><button class="btn btn-primary" id="saveSettings">Save Settings</button></article>
           <article class="panel"><h3>Data Backup</h3><p class="muted">Export a JSON backup to keep a copy of your classes, students, attendance, scores, and group points.</p><button class="btn btn-outline full" id="backupBtn">⇩ Download Full Backup</button><label class="field-label" for="restoreFile">Restore from backup</label><input type="file" id="restoreFile" accept=".json,application/json" class="input-control full"><button class="btn btn-outline full" id="restoreBtn">Restore Backup</button></article>
+          <article class="panel sound-panel"><h3>Sound Effects</h3><p class="muted">Every feature has its own sound: wheel ticks that follow the spin, rating chimes, card dealing, team coins, and more. Sounds are generated on your device, so they work offline.</p>
+            <label class="sound-check"><input type="checkbox" id="soundOn"> Enable sounds</label>
+            <label class="field-label" for="soundVol">Volume <b id="soundVolLabel"></b></label><input type="range" id="soundVol" min="0" max="100" step="5" class="sound-range">
+            <label class="field-label" for="soundTheme">Sound theme</label><select id="soundTheme" class="select-control full"></select>
+            <label class="field-label">Preview</label>
+            <div class="sound-preview" id="soundPreview"><button type="button" class="btn btn-soft" data-sfx="nav">Navigate</button><button type="button" class="btn btn-soft" data-sfx="present">Present</button><button type="button" class="btn btn-soft" data-sfx="absent">Absent</button><button type="button" class="btn btn-soft" data-sfx="wheel">Wheel spin</button><button type="button" class="btn btn-soft" data-sfx="score:5">Score 5</button><button type="button" class="btn btn-soft" data-sfx="score:2">Score 2</button><button type="button" class="btn btn-soft" data-sfx="deal:2">Deal card</button><button type="button" class="btn btn-soft" data-sfx="tada">Teams ready</button><button type="button" class="btn btn-soft" data-sfx="coin">+10 points</button><button type="button" class="btn btn-soft" data-sfx="export">Export</button></div></article>
           <article class="panel danger-panel"><h3>Reset Local Data</h3><p class="muted">This removes records stored in this browser. Download a backup first.</p><button class="btn btn-danger" id="resetAppBtn">Reset Demo Data</button></article>
         </div>
         <div class="privacy-note"><strong>Privacy reminder:</strong> This starter version stores information in the current browser on this device. It does not yet provide teacher accounts, cloud synchronization, or multi-device sharing. Use fictional student names while testing.</div>
@@ -208,5 +215,6 @@
   <script src="app.js"></script>
   <script src="generator.js"></script>
   <script src="recitation.js"></script>
+  <script src="sounds.js"></script>
 </body>
 </html>

@@ -152,3 +152,9 @@ table.att-grid{width:auto;border-collapse:separate;border-spacing:0;white-space:
 .gm-list li{font-size:11px;font-weight:600;color:#33476b;background:color-mix(in srgb,var(--c,#123f91) 9%,#fff);border-radius:7px;padding:5px 9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gm-list .gm-empty{background:#f3f5f9;color:#8c99ad;font-weight:500}
 .gen-apply{background:linear-gradient(90deg,#a855f7,#ec4899);border:0;color:#fff}
+
+/* ---------- Sound settings ---------- */
+#soundToggle{font-size:16px}
+.sound-check{display:flex;gap:9px;align-items:center;font-weight:700;font-size:13px;margin:14px 0 4px;cursor:pointer}.sound-check input{accent-color:#a855f7;width:17px;height:17px}
+.sound-range{width:100%;accent-color:#a855f7;margin:4px 0 6px}
+.sound-preview{display:flex;flex-wrap:wrap;gap:8px}.sound-preview .btn{padding:8px 12px;font-size:11px}

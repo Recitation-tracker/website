@@ -46,6 +46,7 @@ function recSave(){
   if(!recType||!recRating)return toast("Choose a rating first.");
   data.records.push({id:uid(),classId:activeClass().id,studentId:s.id,date:todayISO(),type:recType,rating:recRating,remark:$("teacherRemark").value.trim(),createdAt:new Date().toISOString()});
   save();
+  sfx("score",recRating);
   toast(`${recTypeLabel(recType)}: ${recRating} (${REC_LEVELS[recRating]}) saved for ${s.name}`);
   recResetPanel();renderQueue();renderDashboard();
   $("currentStudentMeta").textContent=`Seat ${s.seat} · ${groupName(s)} · ${recordsFor(s.id).length} previous recitations`;

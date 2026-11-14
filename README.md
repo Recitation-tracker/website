@@ -43,3 +43,7 @@ On the Recitation page the learner's name is shown in the banner. Choose **Oral 
 ## Generator → Group Activity
 
 In **Group Generator**, press **Use in Group Activity** (or **Use in Group Activity** on a saved grouping). The team names and members become that class's teams in Group Activity (points start at 0), and team names appear in the Students table and on the Recitation screen. Renaming a team in either place updates the other. Classes that never used the generator keep the default four teams.
+
+## Sounds
+
+Every feature has its own synthesized sound (no audio files): navigation, attendance marks (present, absent, late, excused, mark-all sweep), wheel ticks that follow the spin speed plus a winner fanfare, rubric chimes whose pitch follows the 1-5 rating, card shuffle and dealing in the group generator, team coins in Group Activity, export whooshes and gentle error bonks. Use the 🔊 button in the top bar to mute, or **Settings & Backup > Sound Effects** to set volume and pick a theme (Marimba, Arcade, Crystal). The engine is in `sounds.js`.

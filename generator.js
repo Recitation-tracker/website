@@ -119,7 +119,7 @@ function genGenerate(){
     repeats:cfg.avoid?genRepeatInfo(groups,counts,id=>wheelLabel(byId.get(id).name)):null
   };
   genRenderResults();
-  if(cfg.animate)genAnimate();
+  if(cfg.animate)genAnimate();else sfx("tada");
 }
 
 /* ---------- reveal animation (shuffle, then deal one by one) ---------- */
@@ -129,16 +129,16 @@ function genAnimate(){
   const groups=genCurrent.groups,max=Math.max(...groups.map(g=>g.members.length)),order=[];
   for(let k=0;k<max;k++)groups.forEach((g,gi)=>{if(k<g.members.length)order.push(document.querySelector(`#genResults li[data-g="${gi}"][data-m="${k}"]`));});
   const tickerNames=groups.flatMap(g=>g.members.map(m=>wheelLabel(m.name)));
-  genRevealing=true;
+  genRevealing=true;sfx("shuffleStart");
   genBanner(`<span class="gen-spin">🎲</span><b id="genBannerText">Shuffling the class…</b><em id="genTicker"></em><button class="btn btn-soft" id="genSkip">Skip ⏭</button>`);
-  const tick=setInterval(()=>{const el=$("genTicker");if(el)el.textContent=tickerNames[Math.floor(Math.random()*tickerNames.length)];},70);
+  const tick=setInterval(()=>{sfx("shuffleTick");const el=$("genTicker");if(el)el.textContent=tickerNames[Math.floor(Math.random()*tickerNames.length)];},70);
   genTimers.push(tick);
   genTimers.push(setTimeout(()=>{
     clearInterval(tick);const t=$("genTicker");if(t)t.textContent="";
     const step=Math.max(70,Math.min(260,4500/order.length));let n=0;
     const deal=()=>{
-      if(n>=order.length)return genFinish();
-      const li=order[n++];li.classList.remove("hid");li.classList.add("pop");
+      if(n>=order.length){sfx("tada");return genFinish();}
+      const li=order[n++];sfx("deal",n);li.classList.remove("hid");li.classList.add("pop");
       const bt=$("genBannerText");if(bt)bt.textContent=`Dealing learners… ${n} / ${order.length}`;
       genTimers.push(setTimeout(deal,step));
     };
