@@ -18,7 +18,12 @@ const GEN_THEMES = {
 let genCurrent = null, genTimers = [], genRevealing = false, genExcluded = new Set(), genExcludedClass = null;
 
 /* ---------- settings & data helpers ---------- */
-function genCfg(){const s=data.settings||(data.settings={});if(!s.gen)s.gen={mode:"size",size:4,count:4,theme:"romblon",avoid:true,skipAbsent:true,animate:true};return s.gen;}
+function genCfg(){const s=data.settings||(data.settings={});if(!s.gen)s.gen={mode:"size",size:4,count:4,theme:"romblon",avoid:true,skipAbsent:true,animate:true};const c=s.gen;if(c.leaderOn===undefined)c.leaderOn=false;if(!c.leaders)c.leaders={};return c;}
+/* leaders (advanced learners picked by the teacher; remembered per class) */
+function genLeaderSet(){return new Set(genCfg().leaders[activeClass()?.id]||[]);}
+function genSaveLeaderSet(set){genCfg().leaders[activeClass().id]=[...set];}
+function genLeadersActive(){const c=genCfg();return c.leaderOn&&c.mode!=="pairs";}
+function genChosenLeaders(pool){if(!genLeadersActive())return [];const set=genLeaderSet();return pool.filter(s=>set.has(s.id)).map(s=>s.id);}
 function genSets(){return data.groupSets||(data.groupSets=[]);}
 function genAbsentIds(){const id=activeClass()?.id,t=todayISO();return new Set((data.attendance||[]).filter(a=>a.classId===id&&a.date===t&&a.status==="Absent").map(a=>a.studentId));}
 function genPool(){const cfg=genCfg(),absent=cfg.skipAbsent?genAbsentIds():new Set();return students().filter(s=>!genExcluded.has(s.id)&&!absent.has(s.id));}
@@ -53,22 +58,30 @@ function genPairCounts(){
   }));
   return m;
 }
-function genBuild(pool,sizes,counts,avoid){
-  const ids=pool.map(s=>s.id);
-  const sz=genShuffle(sizes.slice());
-  const split=arr=>{const out=[];let p=0;sz.forEach(k=>{out.push(arr.slice(p,p+k));p+=k;});return out;};
+function genBuild(pool,sizes,counts,avoid,leaders){
+  leaders=leaders||[];
+  const ids=pool.map(s=>s.id).filter(id=>!leaders.includes(id));
+  const sz=genShuffle(sizes.slice()),G=sz.length;
+  const slot=genShuffle(Array.from({length:G},(_,i)=>i)).slice(0,leaders.length);
+  const fixed=new Array(G).fill(0);slot.forEach(i=>{fixed[i]=1;});
   const w=(a,b)=>{const c=counts.get(genPairKey(a,b))||0;return c*c;};
-  const cost=g=>{let c=0;for(let i=0;i<g.length;i++)for(let j=i+1;j<g.length;j++)c+=w(g[i],g[j]);return c;};
-  const useHistory=avoid&&counts.size>0&&sz.length>1;
-  const restarts=useHistory?20:1;
+  const cost=gr=>{let c=0;for(let i=0;i<gr.length;i++)for(let j=i+1;j<gr.length;j++)c+=w(gr[i],gr[j]);return c;};
+  const make=()=>{
+    const rest=genShuffle(ids.slice()),groups=sz.map(()=>[]);let p=0;
+    slot.forEach((gi,k)=>groups[gi].push(leaders[k]));
+    groups.forEach((gr,i)=>{const need=sz[i]-gr.length;for(let k=0;k<need;k++)gr.push(rest[p++]);});
+    return groups;
+  };
+  const useHistory=avoid&&counts.size>0&&G>1,restarts=useHistory?20:1;
   let best=null,bestCost=Infinity;
   for(let r=0;r<restarts;r++){
-    const groups=split(genShuffle(ids.slice()));
+    const groups=make();
     if(!useHistory)return groups;
-    const costs=groups.map(cost);let total=costs.reduce((a,b)=>a+b,0);
+    const costs=groups.map(cost);let total=costs.reduce((x,y)=>x+y,0);
     for(let it=0;it<5000&&total>0;it++){
-      const a=Math.floor(Math.random()*groups.length),b=Math.floor(Math.random()*groups.length);if(a===b)continue;
-      const i=Math.floor(Math.random()*groups[a].length),j=Math.floor(Math.random()*groups[b].length);
+      const a=Math.floor(Math.random()*G),b=Math.floor(Math.random()*G);if(a===b)continue;
+      const na=groups[a].length-fixed[a],nb=groups[b].length-fixed[b];if(na<1||nb<1)continue;
+      const i=fixed[a]+Math.floor(Math.random()*na),j=fixed[b]+Math.floor(Math.random()*nb);
       [groups[a][i],groups[b][j]]=[groups[b][j],groups[a][i]];
       const ca=cost(groups[a]),cb=cost(groups[b]);
       if(ca+cb<=costs[a]+costs[b]){total+=ca+cb-costs[a]-costs[b];costs[a]=ca;costs[b]=cb;}
@@ -108,17 +121,19 @@ function genGenerate(){
   const pool=genPool();
   if(pool.length<2)return toast("Need at least 2 learners in the pool.");
   const cfg=genCfg(),sizes=genSizes(pool.length,cfg),counts=genPairCounts();
-  const groups=genBuild(pool,sizes,counts,cfg.avoid);
+  const chosen=genChosenLeaders(pool),leaders=genShuffle(chosen.slice()).slice(0,sizes.length);
+  const groups=genBuild(pool,sizes,counts,cfg.avoid,leaders);
   const byId=new Map(pool.map(s=>[s.id,s]));
   const names=genNames(cfg.theme,groups.length);
   const historyCount=genSets().filter(x=>x.classId===activeClass().id).length;
   genCurrent={
     id:uid(),classId:activeClass().id,createdAt:new Date().toISOString(),mode:cfg.mode,theme:cfg.theme,
     label:genModeLabel(cfg,groups.length),savedId:null,title:"",historyCount,
-    groups:groups.map((g,i)=>({name:names[i],members:g.map(id=>({id,name:byId.get(id).name}))})),
+    groups:groups.map((g,i)=>({name:names[i],leader:leaders.includes(g[0])?g[0]:null,members:g.map(id=>({id,name:byId.get(id).name}))})),
+    extraLeaders:Math.max(0,chosen.length-leaders.length),
     repeats:cfg.avoid?genRepeatInfo(groups,counts,id=>wheelLabel(byId.get(id).name)):null
   };
-  genRenderResults();
+  genRenderResults(cfg.animate);
   if(cfg.animate)genAnimate();else sfx("tada");
 }
 
@@ -157,6 +172,21 @@ function genSetupRender(){
   $("genCount").value=cfg.count;
   const sel=$("genTheme");if(!sel.options.length)sel.innerHTML=Object.entries(GEN_THEMES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join("");
   sel.value=cfg.theme;$("genAvoid").checked=cfg.avoid;$("genSkipAbsent").checked=cfg.skipAbsent;$("genAnimate").checked=cfg.animate;
+  $("genLeadersOn").checked=cfg.leaderOn;
+  const lbox=$("genLeaderBox"),pairs=cfg.mode==="pairs";
+  lbox.hidden=!cfg.leaderOn;
+  if(cfg.leaderOn){
+    const poolNow=genPool(),lset=genLeaderSet(),G=genSizes(poolNow.length,cfg).length,L=poolNow.filter(s=>lset.has(s.id)).length;
+    $("genLeaderPool").innerHTML=pairs?"":poolNow.map(s=>`<button type="button" class="gen-chip${lset.has(s.id)?" lead":""}" data-id="${s.id}" title="${lset.has(s.id)?"Click to remove as leader":"Click to make a leader"}">${lset.has(s.id)?"★ ":""}${escapeHTML(wheelLabel(s.name))}</button>`).join("")||'<span class="muted">No learners in the pool.</span>';
+    let msg="";
+    if(pairs)msg="Leaders are not used with Random partners. Switch to Group size or No. of groups.";
+    else if(!L)msg="Tap the advanced learners below to make them leaders.";
+    else if(L===G)msg=`✓ ${L} leaders for ${G} groups: one per group.`;
+    else if(L>G)msg=`${L} leaders for ${G} groups: ${L-G} randomly chosen leader${L-G>1?"s":""} will join as regular members.`;
+    else msg=`${L} leader${L>1?"s":""} for ${G} groups: ${G-L} group${G-L>1?"s":""} will have no leader (you can set one with ☆ after).`;
+    $("genLeaderNote").textContent=msg;
+    $("genLeaderMatch").hidden=pairs||L<2||L===G;
+  }
   const nSaved=genSets().filter(x=>x.classId===cls?.id).length;
   $("genAvoidNote").textContent=nSaved?`Using ${nSaved} saved grouping${nSaved>1?"s":""} as memory.`:"Save a grouping to start building memory.";
   const all=students(),absent=cfg.skipAbsent?genAbsentIds():new Set(),pool=genPool(),sizes=genSizes(pool.length,cfg);
@@ -167,7 +197,7 @@ function genSetupRender(){
     return `<button type="button" class="gen-chip${isEx?" off":""}${isAbs?" absent":""}" data-id="${s.id}" ${isAbs?"disabled":""} title="${isAbs?"Marked absent today":isEx?"Click to include":"Click to leave out"}">${escapeHTML(wheelLabel(s.name))}</button>`;
   }).join("")||`<span class="muted">No learners in this class yet.</span>`;
 }
-function genRenderResults(){
+function genRenderResults(hide){
   const box=$("genResults"),c=genCurrent;
   if(!c){box.innerHTML=`<div class="gen-empty"><div class="gen-empty-dice">🎲</div><h3>Ready when you are</h3><p>Pick a grouping style on the left, then press <b>Generate groups</b>.</p></div>`;return;}
   const used=c.groups.map(g=>g.members.length),total=used.reduce((a,b)=>a+b,0);
@@ -179,13 +209,14 @@ function genRenderResults(){
     const col=GEN_COLORS[gi%GEN_COLORS.length];
     const lis=g.members.map((m,mi)=>{
       const rep=c.repeats?.withIds[m.id];
-      return `<li class="hid" data-g="${gi}" data-m="${mi}"><span class="no">${mi+1}</span><span class="nm">${escapeHTML(m.name)}</span>${rep?`<i class="rep" title="Has worked with: ${escapeHTML(rep.join(", "))}">↻</i>`:""}</li>`;
+      const lead=g.leader===m.id;
+      return `<li class="${hide?"hid ":""}${lead?"leader":""}" data-g="${gi}" data-m="${mi}"><span class="no">${mi+1}</span><span class="nm">${escapeHTML(m.name)}</span>${rep?`<i class="rep" title="Has worked with: ${escapeHTML(rep.join(", "))}">↻</i>`:""}<button type="button" class="lead-btn" data-g="${gi}" data-id="${m.id}" title="${lead?"Group leader (click to remove)":"Make group leader"}" aria-label="${lead?"Remove leader":"Make leader"}">${lead?"★":"☆"}</button></li>`;
     }).join("");
-    return `<article class="gen-card" style="--c:${col}"><header><input class="gen-name" data-g="${gi}" value="${escapeHTML(g.name)}" maxlength="40" aria-label="Group name"><button type="button" class="gen-dice" data-g="${gi}" title="New team name">🎲</button></header><ol>${lis}</ol><footer>${g.members.length} members</footer></article>`;
+    return `<article class="gen-card" style="--c:${col}"><header><input class="gen-name" data-g="${gi}" value="${escapeHTML(g.name)}" maxlength="40" aria-label="Group name"><button type="button" class="gen-dice" data-g="${gi}" title="New team name">🎲</button></header><ol>${lis}</ol><footer>${g.members.length} members${g.leader?` · ★ ${escapeHTML(wheelLabel(g.members.find(m=>m.id===g.leader)?.name||""))}`:""}</footer></article>`;
   }).join("");
   box.innerHTML=`
     <div class="gen-head">
-      <div><h3>${c.groups.length} groups · ${total} learners</h3><p class="muted">${escapeHTML(c.label)} · sizes ${used.join(", ")}</p></div>
+      <div><h3>${c.groups.length} groups · ${total} learners</h3><p class="muted">${escapeHTML(c.label)} · sizes ${used.join(", ")}${c.groups.some(x=>x.leader)?` · ${c.groups.filter(x=>x.leader).length} leader${c.groups.filter(x=>x.leader).length>1?"s":""} ★`:""}</p></div>
       <div class="gen-badges">${badge}${genIsApplied()?`<span class="pill green">👥 Active in Group Activity</span>`:""}</div>
     </div>
     <div class="gen-actions">
@@ -220,7 +251,7 @@ function genApplySet(set,key,title){
   const pts=classGroups().reduce((a,x)=>a+(x.points||0),0);
   if(pts>0&&!confirm(`Replace the current teams for ${cls.name}?\nTheir ${pts} point${pts>1?"s":""} will be reset to zero.`))return false;
   ensureGroupData();
-  data.classGroups[cls.id]=set.groups.map((x,i)=>({id:i+1,name:x.name,points:0}));
+  data.classGroups[cls.id]=set.groups.map((x,i)=>({id:i+1,name:x.name,points:0,leader:x.leader||null}));
   cls.students.forEach(s=>{s.group=null;});
   set.groups.forEach((x,i)=>x.members.forEach(m=>{const s=cls.students.find(y=>y.id===m.id);if(s)s.group=i+1;}));
   data.groupMeta[cls.id]={key,title,at:new Date().toISOString()};
@@ -237,6 +268,18 @@ function genApplyCurrent(){
 function genPushNames(){
   if(!genCurrent||!genIsApplied())return;
   const arr=classGroups();genCurrent.groups.forEach((x,i)=>{if(arr[i])arr[i].name=x.name;});save();
+}
+function genPushLeaders(){
+  if(!genCurrent||!genIsApplied())return;
+  const arr=classGroups();genCurrent.groups.forEach((x,i)=>{if(arr[i])arr[i].leader=x.leader||null;});save();
+}
+function genSetLeader(gi,id){
+  const c=genCurrent;if(!c||!c.groups[gi])return;
+  if(genRevealing)genFinish();
+  const gr=c.groups[gi];
+  if(gr.leader===id)gr.leader=null;
+  else{gr.leader=id;const i=gr.members.findIndex(m=>m.id===id);if(i>0){const [m]=gr.members.splice(i,1);gr.members.unshift(m);}}
+  genPushLeaders();genRenderResults();
 }
 function genSyncFromGroups(){
   // a team was renamed in Group Activity: mirror it in the generator's current groups
@@ -262,7 +305,7 @@ function genLoad(id){
   genCurrent={id:s.id,savedId:s.id,classId:s.classId,createdAt:s.createdAt,mode:s.mode,theme:s.theme,label:s.label,title:s.title,historyCount:0,repeats:null,groups:JSON.parse(JSON.stringify(s.groups))};
   genRenderResults();genFinish();window.scrollTo({top:0,behavior:"smooth"});
 }
-function genExportObj(s){const cls=activeClass();return {title:s.title||genDefaultTitle(s),className:cls?.name||"",createdAt:s.createdAt,label:s.label,groups:s.groups.map(g=>({name:g.name,members:g.members.map(m=>m.name)}))};}
+function genExportObj(s){const cls=activeClass();return {title:s.title||genDefaultTitle(s),className:cls?.name||"",createdAt:s.createdAt,label:s.label,groups:s.groups.map(g=>({name:g.name,members:g.members.map(m=>({name:m.name,lead:g.leader===m.id}))}))};}
 function genFileName(obj,ext){const d=new Date(obj.createdAt),p=n=>String(n).padStart(2,"0");return ("Groups_"+(obj.className||"class")+"_"+d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())).replace(/[^A-Za-z0-9_-]+/g,"_")+"."+ext;}
 function genExport(kind,source){
   const s=source||genCurrent;if(!s)return;
@@ -315,18 +358,18 @@ function genBuildXlsx(o){
   const maxM=Math.max(...o.groups.map(g=>g.members.length));
   const grid=[[{v:o.title,s:2}],[o.className+" · "+o.label+" · "+genDate(o.createdAt)],[]];
   grid.push(o.groups.map((g,i)=>({v:g.name,s:3+(i%GEN_COLORS.length)})));
-  for(let k=0;k<maxM;k++)grid.push(o.groups.map(g=>g.members[k]?{v:g.members[k],s:1}:null));
+  for(let k=0;k<maxM;k++)grid.push(o.groups.map(g=>g.members[k]?{v:g.members[k].name+(g.members[k].lead?" (Leader)":""),s:g.members[k].lead?3+GEN_COLORS.length:1}:null));
   grid.push([]);grid.push(o.groups.map(g=>({v:g.members.length+" members",s:2})));
-  const list=[[{v:"Group",s:3},{v:"No.",s:3},{v:"Learner",s:3}]];
-  o.groups.forEach(g=>g.members.forEach((m,i)=>list.push([{v:g.name,s:1},{v:i+1,s:1},{v:m,s:1}])));
+  const list=[[{v:"Group",s:3},{v:"No.",s:3},{v:"Learner",s:3},{v:"Role",s:3}]];
+  o.groups.forEach(g=>g.members.forEach((m,i)=>list.push([{v:g.name,s:1},{v:i+1,s:1},{v:m.name,s:1},{v:m.lead?"Leader":"Member",s:1}])));
   const fills=GEN_COLORS.map(c=>`<fill><patternFill patternType="solid"><fgColor rgb="FF${c.slice(1).toUpperCase()}"/><bgColor indexed="64"/></patternFill></fill>`).join("");
   const xfs=GEN_COLORS.map((_,i)=>`<xf numFmtId="0" fontId="2" fillId="${2+i}" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>`).join("");
   const styles='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
    +'<fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts>'
-   +`<fills count="${2+GEN_COLORS.length}"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>${fills}</fills>`
+   +`<fills count="${3+GEN_COLORS.length}"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>${fills}<fill><patternFill patternType="solid"><fgColor rgb="FFFFF2C2"/><bgColor indexed="64"/></patternFill></fill></fills>`
    +'<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FF9AA5B4"/></left><right style="thin"><color rgb="FF9AA5B4"/></right><top style="thin"><color rgb="FF9AA5B4"/></top><bottom style="thin"><color rgb="FF9AA5B4"/></bottom><diagonal/></border></borders>'
    +'<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
-   +`<cellXfs count="${3+GEN_COLORS.length}"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>${xfs}</cellXfs>`
+   +`<cellXfs count="${4+GEN_COLORS.length}"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>${xfs}<xf numFmtId="0" fontId="1" fillId="${2+GEN_COLORS.length}" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/></cellXfs>`
    +'<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
   const files=[
    {name:"[Content_Types].xml",text:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
@@ -335,7 +378,7 @@ function genBuildXlsx(o){
    {name:"xl/_rels/workbook.xml.rels",text:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
    {name:"xl/styles.xml",text:styles},
    {name:"xl/worksheets/sheet1.xml",text:genSheetXml(grid,o.groups.map(()=>32))},
-   {name:"xl/worksheets/sheet2.xml",text:genSheetXml(list,[30,7,38])}
+   {name:"xl/worksheets/sheet2.xml",text:genSheetXml(list,[30,7,38,12])}
   ];
   return genZip(files,"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 }
@@ -378,7 +421,7 @@ function genBuildPdf(o){
     ops.push(`0.75 w ${hex(col)} RG ${x} ${top-h} ${COLW} ${h} re S`);
     ops.push(T(cut(g.name,30),x+8,top-HEAD+8,11,true,"1 1 1"));
     const cnt=g.members.length+" members";ops.push(T(cnt,x+COLW-8-cnt.length*4.3,top-HEAD+8,8,false,"1 1 1"));
-    g.members.forEach((m,j)=>ops.push(T((j+1)+".  "+cut(m,34),x+8,top-HEAD-ROW*(j+1)+4,10,false,"0.1 0.13 0.2")));
+    g.members.forEach((m,j)=>ops.push(m.lead?T((j+1)+".  "+cut(m.name,24)+"  (Leader)",x+8,top-HEAD-ROW*(j+1)+4,10,true,"0.48 0.32 0"):T((j+1)+".  "+cut(m.name,34),x+8,top-HEAD-ROW*(j+1)+4,10,false,"0.1 0.13 0.2")));
     ycol[c]-=h+10;
   });
   finish();
@@ -411,6 +454,10 @@ function genInit(){
   [["genAvoid","avoid"],["genSkipAbsent","skipAbsent"],["genAnimate","animate"]].forEach(([id,k])=>$(id).onchange=e=>{cfg()[k]=e.target.checked;touch();});
   $("genPool").addEventListener("click",e=>{const b=e.target.closest(".gen-chip");if(!b||b.disabled)return;const id=b.dataset.id;genExcluded.has(id)?genExcluded.delete(id):genExcluded.add(id);genSetupRender();});
   $("genPoolAll").onclick=()=>{genExcluded=new Set();genSetupRender();};
+  $("genLeadersOn").onchange=e=>{cfg().leaderOn=e.target.checked;touch();};
+  $("genLeaderPool").addEventListener("click",e=>{const b=e.target.closest(".gen-chip");if(!b)return;const set=genLeaderSet();set.has(b.dataset.id)?set.delete(b.dataset.id):set.add(b.dataset.id);genSaveLeaderSet(set);touch();});
+  $("genLeaderClear").onclick=()=>{genSaveLeaderSet(new Set());touch();};
+  $("genLeaderMatch").onclick=()=>{const L=genChosenLeaders(genPool()).length;if(L<2)return;cfg().mode="count";cfg().count=Math.min(30,L);touch();toast(`Groups set to ${cfg().count}, one per leader.`);};
   $("genGo").onclick=genGenerate;
   $("genBanner").addEventListener("click",e=>{if(e.target.closest("#genSkip"))genFinish();});
   const res=$("genResults");
@@ -418,6 +465,8 @@ function genInit(){
   res.addEventListener("change",e=>{if(e.target.id==="genTitle"&&genCurrent)genCurrent.title=e.target.value.trim();});
   res.addEventListener("click",e=>{
     if(!genCurrent)return;
+    const star=e.target.closest(".lead-btn");
+    if(star){genSetLeader(+star.dataset.g,star.dataset.id);return;}
     const dice=e.target.closest(".gen-dice");
     if(dice){const used=new Set(genCurrent.groups.map(g=>g.name)),n=genOneName(genCurrent.theme,used);if(n){genCurrent.groups[+dice.dataset.g].name=n;dice.parentElement.querySelector(".gen-name").value=n;genPushNames();}else toast("Plain numbering is on. Choose a name theme first.");return;}
     const id=e.target.closest("button")?.id;

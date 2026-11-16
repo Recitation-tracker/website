@@ -201,7 +201,7 @@ window.SFX=(()=>{
     ["#spinWheelBtn,#genGo,#genAgain,#saveRatingBtn,.likert-row,.rec-type,#genSave,#genApply,#genXlsx,#genPdf,#dialogSave,#attMenu button,#recMenu button",null],
     [".gen-dice[data-g],#genRename","dice"],["#genSkip","skip"],
     [".att-cell:not(.off),.dayhead","tick"],
-    [".gen-seg button,.gen-chips button,.gen-chip,.gen-stepper button","select"],
+    ["#genLeaderPool .gen-chip,.lead-btn","coin"],[".gen-seg button,.gen-chips button,.gen-chip,.gen-stepper button","select"],
     ["button,.btn,.icon-button","tick"]
   ];
   document.addEventListener("click",e=>{

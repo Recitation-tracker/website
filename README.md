@@ -47,3 +47,7 @@ In **Group Generator**, press **Use in Group Activity** (or **Use in Group Activ
 ## Sounds
 
 Every feature has its own synthesized sound (no audio files): navigation, attendance marks (present, absent, late, excused, mark-all sweep), wheel ticks that follow the spin speed plus a winner fanfare, rubric chimes whose pitch follows the 1-5 rating, card shuffle and dealing in the group generator, team coins in Group Activity, export whooshes and gentle error bonks. Use the 🔊 button in the top bar to mute, or **Settings & Backup > Sound Effects** to set volume and pick a theme (Marimba, Arcade, Crystal). The engine is in `sounds.js`.
+
+## Group leaders
+
+In **Group Generator > Group leaders**, tick *Give each group a leader* and tap your advanced learners. Each group gets one leader (placed first, shown with ★ and highlighted). Extra leaders join as members; if there are too few, some groups have no leader, and you can set one with ☆ afterwards. Leaders carry into saved groupings, Excel/PDF exports, and Group Activity.

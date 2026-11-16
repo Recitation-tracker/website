@@ -150,7 +150,15 @@
               <label><input type="checkbox" id="genAnimate"> <span>Shuffle &amp; reveal one by one</span></label>
             </div>
 
-            <h3>3 · Who is in?</h3>
+            <h3>3 · Group leaders <span class="gen-optional">optional</span></h3>
+            <div class="wheel-options gen-opts"><label><input type="checkbox" id="genLeadersOn"> <span>Give each group a leader<small>Pick your advanced learners. Each group gets one.</small></span></label></div>
+            <div id="genLeaderBox" hidden>
+              <p class="gen-hint gen-leader-note" id="genLeaderNote"></p>
+              <div class="gen-pool" id="genLeaderPool"></div>
+              <div class="gen-leader-actions"><button type="button" class="gen-link" id="genLeaderMatch" hidden>Match groups to leaders</button><button type="button" class="gen-link" id="genLeaderClear">Clear leaders</button></div>
+            </div>
+
+            <h3>4 · Who is in?</h3>
             <p class="muted" id="genPoolNote"></p>
             <div class="gen-pool" id="genPool"></div>
             <button type="button" class="gen-link" id="genPoolAll">Include everyone</button>
