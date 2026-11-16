@@ -186,7 +186,7 @@ window.SFX=(()=>{
     [/^(Oral Recitation|Boardwork):/,null],
     [/^(Need |Add students|Pick a student|Choose |Spin the wheel|Switch to|No student|No group|Plain numbering|Please complete|Could not|Allow pop)/i,"warn"],
     [/downloaded/i,"export"],[/^Groups saved/,"save"],[/teams sent to Group Activity/i,"apply"],
-    [/^Group points reset/,"sweepDown"],[/^Student skipped/,"skip"],[/^(Marked as no class|Class day restored)/,"toggle"],
+    [/^(Group points reset|Class deleted)/,"sweepDown"],[/^Student skipped/,"skip"],[/^(Marked as no class|Class day restored)/,"toggle"],
     [/^Selected:/,"tada"],
     [/^(Student|Class) (added|updated)|^Settings saved|^Team renamed|^Backup restored|^Demo data restored/,"save"]
   ];
