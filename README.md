@@ -1,4 +1,4 @@
-# Recitation Tracker — HTML, CSS, JavaScript starter
+# ClassPulse — HTML, CSS, JavaScript starter
 
 ## Run it
 1. Extract the ZIP file.

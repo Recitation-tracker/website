@@ -402,7 +402,7 @@ function genBuildPdf(o){
   const T=(s,x,y,size,bold,rgb)=>`BT /${bold?"F2":"F1"} ${size} Tf ${rgb||"0 0 0"} rg ${x.toFixed(1)} ${y.toFixed(1)} Td (${genPdfEsc(s)}) Tj ET`;
   const cut=(s,n)=>String(s).length>n?String(s).slice(0,n-3)+"...":String(s);
   const pages=[];let ops=[],ycol=[0,0];
-  const finish=()=>{ops.push(T("Generated with Recitation Tracker · Page "+(pages.length+1),M,24,8,false,"0.55 0.6 0.66"));pages.push(ops.join("\n"));};
+  const finish=()=>{ops.push(T("Generated with ClassPulse · Page "+(pages.length+1),M,24,8,false,"0.55 0.6 0.66"));pages.push(ops.join("\n"));};
   const newPage=first=>{
     if(ops.length)finish();
     ops=[];let y=H-M;
