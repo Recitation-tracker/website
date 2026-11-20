@@ -49,7 +49,7 @@ function recSave(){
   sfx("score",recRating);
   toast(`${recTypeLabel(recType)}: ${recRating} (${REC_LEVELS[recRating]}) saved for ${s.name}`);
   recResetPanel();renderQueue();renderDashboard();
-  $("currentStudentMeta").textContent=`Seat ${s.seat} · ${groupName(s)} · ${recordsFor(s.id).length} previous recitations`;
+  $("currentStudentMeta").textContent=`${groupName(s)} · ${recordsFor(s.id).length} previous recitations`;
 }
 
 /* ---------- Recitation Record grid (Reports) ---------- */
@@ -65,7 +65,7 @@ function recGridData(){
   const types=recTab==="all"?["oral","boardwork"]:[recTab];
   const idx=new Map();
   recs.forEach(r=>{if(!types.includes(r.type))return;const k=r.studentId+"|"+r.date;if(!idx.has(k))idx.set(k,[]);idx.get(k).push(r);});
-  const list=cls.students.slice().sort((a,b)=>(a.seat||0)-(b.seat||0));
+  const list=cls.students.slice();
   return {cls,days,idx,list,types};
 }
 function renderRecGrid(){
