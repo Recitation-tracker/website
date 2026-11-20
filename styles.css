@@ -174,3 +174,5 @@ table.att-grid{width:auto;border-collapse:separate;border-spacing:0;white-space:
 .class-actions .btn{flex:1 1 auto;margin:0;white-space:nowrap}
 .class-actions .btn-danger{flex:0 0 auto}
 .class-actions .btn:disabled{opacity:.45;cursor:not-allowed}
+
+.icon-button .dl-icon{display:block;margin:auto}
