@@ -128,6 +128,16 @@
       <section class="view" id="view-groups">
         <div class="section-intro"><div><h2>Group Activity</h2><p id="groupSource">Track team points and encourage collaboration.</p></div><div class="inline-actions"><button class="btn btn-outline" id="newTeamsBtn">🎲 Make new teams</button><button class="btn btn-primary" id="resetGroupPoints">Reset Points</button></div></div>
         <div class="group-grid" id="groupGrid"></div>
+        <details class="panel rb-ref" open>
+          <summary><h3>General Rubrics for Group Activities</h3><span>Rating scale 1–5 · Total /25</span></summary>
+          <div class="rb-grid">
+            <div><h4>Rating Scale: 1–5 (Ordinal Scale)</h4><table class="rb-table"><thead><tr><th>Rating</th><th>Description</th></tr></thead><tbody><tr><td><b>5</b></td><td>Excellent</td></tr><tr><td><b>4</b></td><td>Very Satisfactory</td></tr><tr><td><b>3</b></td><td>Satisfactory</td></tr><tr><td><b>2</b></td><td>Fair</td></tr><tr><td><b>1</b></td><td>Needs Improvement</td></tr></tbody></table></div>
+            <div><h4>General Assessment Criteria</h4><table class="rb-table"><thead><tr><th>Criteria</th><th>Description</th></tr></thead><tbody><tr><td><b>1. Cooperation and Teamwork</b></td><td>Demonstrates cooperation, active participation, and respect for group members.</td></tr><tr><td><b>2. Content and Accuracy</b></td><td>Shows understanding of the topic and presents correct and relevant information.</td></tr><tr><td><b>3. Creativity and Presentation</b></td><td>Demonstrates creativity, originality, and an organized presentation of outputs.</td></tr><tr><td><b>4. Task Completion</b></td><td>Completes the assigned activity according to the given instructions and requirements.</td></tr><tr><td><b>5. Time Management</b></td><td>Finishes and submits the activity within the allotted time.</td></tr></tbody></table></div>
+            <div><h4>Scoring Sheet</h4><table class="rb-table"><thead><tr><th>Criteria</th><th>Rating (1–5)</th></tr></thead><tbody><tr><td>Cooperation and Teamwork</td><td></td></tr><tr><td>Content and Accuracy</td><td></td></tr><tr><td>Creativity and Presentation</td><td></td></tr><tr><td>Task Completion</td><td></td></tr><tr><td>Time Management</td><td></td></tr><tr><td><b>Total Score</b></td><td><b>/25</b></td></tr></tbody></table></div>
+            <div><h4>Interpretation of Scores</h4><table class="rb-table"><thead><tr><th>Total Score</th><th>Performance Level</th></tr></thead><tbody><tr><td>22–25</td><td>Excellent</td></tr><tr><td>18–21</td><td>Very Satisfactory</td></tr><tr><td>14–17</td><td>Satisfactory</td></tr><tr><td>10–13</td><td>Fair</td></tr><tr><td>5–9</td><td>Needs Improvement</td></tr></tbody></table></div>
+          </div>
+          <p class="rb-note"><b>Note:</b> This rubric can be used for general classroom group activities, including problem-solving, research tasks, collaborative projects, reporting, and group presentations. Use <b>Score with rubric</b> on a team card to record a score.</p>
+        </details>
         <div class="panel group-turn"><div><span class="eyebrow">GROUP ACTIVITY TIP</span><h3>Reward teamwork, not only speed.</h3><p>Give points for clear explanations, shared participation, and helping classmates understand a solution.</p></div><button class="btn btn-outline" id="randomGroupStudent">Pick Group Member</button></div>
       </section>
 
@@ -221,6 +231,7 @@
   <div class="att-menu" id="recMenu" hidden></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <dialog id="simpleDialog" class="modal"><form method="dialog"><div class="modal-heading"><h3 id="dialogTitle">Add item</h3><button class="icon-button" value="cancel" aria-label="Close">×</button></div><div id="dialogBody"></div><div class="modal-actions"><button class="btn btn-outline" value="cancel">Cancel</button><button class="btn btn-primary" id="dialogSave" value="default">Save</button></div></form></dialog>
+  <script src="rubric.js"></script>
   <script src="app.js"></script>
   <script src="import.js"></script>
   <script src="generator.js"></script>

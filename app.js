@@ -206,11 +206,12 @@ function nextStudent(){spinWheel();}
 
 
 
+function lastScore(g){const l=(data.groupScores||[]).filter(x=>x.classId===activeClass()?.id&&x.groupId===g.id).slice(-1)[0];return l?`<p class="rb-last">Last: ${l.total}/25 · ${gaLevel(l.total)}</p>`:"";}
 function renderGroups(){
   const list=students(),gs=classGroups(),top=[...gs].sort((a,b)=>b.points-a.points)[0],cols=typeof GEN_COLORS!=="undefined"?GEN_COLORS:["#123f91"];
   $("groupGrid").innerHTML=gs.map((g,gi)=>{
     const members=list.filter(s=>+s.group===g.id).sort((x,y)=>(y.id===g.leader)-(x.id===g.leader)),lead=top&&g.id===top.id&&g.points>0;
-    return `<article class="group-card ${lead?"leader":""}" style="--c:${cols[gi%cols.length]}"><div class="group-top"><h3>${escapeHTML(g.name)}</h3><div class="group-top-tools">${lead?"🏆":""}<button type="button" class="gen-dice" data-group-rename="${g.id}" title="Rename team">✎</button></div></div><div class="group-points">${g.points} <small style="font-size:11px;color:#8290a5">pts</small></div><p>${members.length} member${members.length===1?"":"s"}</p><ul class="gm-list">${members.map(s=>`<li${s.id===g.leader?' class="gm-leader"':""} title="${escapeHTML(s.name)}${s.id===g.leader?" (leader)":""}">${s.id===g.leader?"★ ":""}${escapeHTML(wheelLabel(s.name))}</li>`).join("")||'<li class="gm-empty">No members yet</li>'}</ul><div class="group-actions"><button class="btn btn-soft" data-group-add="${g.id}">＋10 Points</button><button class="btn btn-outline" data-group-sub="${g.id}">−5</button></div></article>`;
+    return `<article class="group-card ${lead?"leader":""}" style="--c:${cols[gi%cols.length]}"><div class="group-top"><h3>${escapeHTML(g.name)}</h3><div class="group-top-tools">${lead?"🏆":""}<button type="button" class="gen-dice" data-group-rename="${g.id}" title="Rename team">✎</button></div></div><div class="group-points">${g.points} <small style="font-size:11px;color:#8290a5">pts</small></div>${lastScore(g)}<p>${members.length} member${members.length===1?"":"s"}</p><ul class="gm-list">${members.map(s=>`<li${s.id===g.leader?' class="gm-leader"':""} title="${escapeHTML(s.name)}${s.id===g.leader?" (leader)":""}">${s.id===g.leader?"★ ":""}${escapeHTML(wheelLabel(s.name))}</li>`).join("")||'<li class="gm-empty">No members yet</li>'}</ul><div class="group-actions"><button class="btn btn-primary" data-group-score="${g.id}">Score with rubric</button></div></article>`;
   }).join("");
   const meta=(data.groupMeta||{})[activeClass()?.id],un=list.filter(s=>!gs.some(g=>g.id===+s.group)).length;
   $("groupSource").textContent=(meta?`Teams from “${meta.title}” · applied ${new Date(meta.at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}`:"Track team points and encourage collaboration.")+(un&&meta?` · ${un} learner${un>1?"s":""} not in a team`:"");
@@ -242,6 +243,7 @@ function deleteClass(id){
   data.records=data.records.filter(r=>r.classId!==id);
   data.attendance=data.attendance.filter(x=>x.classId!==id);
   data.groupSets=(data.groupSets||[]).filter(x=>x.classId!==id);
+  data.groupScores=(data.groupScores||[]).filter(x=>x.classId!==id);
   [data.classGroups,data.groupMeta,data.noClass,data.settings?.gen?.leaders].forEach(o=>{if(o)delete o[id];});
   if(data.activeClassId===id){data.activeClassId=data.classes[0].id;currentStudentId=null;}
   if(typeof genCurrent!=="undefined"&&genCurrent&&genCurrent.classId===id){genClearTimers();genBanner("");genCurrent=null;}
@@ -276,10 +278,9 @@ function bindEvents(){
  $("groupGrid").addEventListener("click",e=>{
   const rn=e.target.closest("[data-group-rename]");
   if(rn){const g=classGroups().find(x=>x.id===+rn.dataset.groupRename);if(!g)return;openDialog("Rename team",[{name:"name",label:"Team name",value:g.name,required:true}],v=>{g.name=v.name.trim()||g.name;save();if(typeof genSyncFromGroups==="function")genSyncFromGroups();renderGroups();renderDashboard();toast("Team renamed.");});return;}
-  const add=e.target.closest("[data-group-add]"),sub=e.target.closest("[data-group-sub]");if(!add&&!sub)return;
-  const g=classGroups().find(x=>x.id===+(add?.dataset.groupAdd||sub.dataset.groupSub));g.points=Math.max(0,g.points+(add?10:-5));save();renderGroups();renderDashboard();toast("Group points updated.");});
+  const sc=e.target.closest("[data-group-score]");if(sc)openGroupRubric(+sc.dataset.groupScore);});
  $("newTeamsBtn").onclick=()=>showView("generator");
- $("resetGroupPoints").onclick=()=>{if(confirm("Reset all group points to zero?")){classGroups().forEach(g=>g.points=0);save();renderGroups();renderDashboard();toast("Group points reset.");}};
+ $("resetGroupPoints").onclick=()=>{if(confirm("Reset all group points and rubric scores for this class to zero?")){classGroups().forEach(g=>g.points=0);data.groupScores=(data.groupScores||[]).filter(x=>x.classId!==activeClass().id);save();renderGroups();renderDashboard();toast("Group points reset.");}};
  $("randomGroupStudent").onclick=()=>{const s=students().filter(x=>x.group);if(!s.length)return toast("No group members found.");const picked=s[Math.floor(Math.random()*s.length)];toast(`Selected: ${picked.name} · ${groupName(picked)}`);};
  $("studentSearch").oninput=renderStudents;$("studentsBody").addEventListener("click",e=>{const b=e.target.closest("[data-student-edit]");if(b)editStudent(b.dataset.studentEdit);});
  $("exportRecitation").onclick=exportRecitation;$("exportAttendance").onclick=exportAttendance;$("exportGroups").onclick=exportGroups;$("exportIndividual").onclick=exportIndividual;$("exportQuick").onclick=exportRecitation;

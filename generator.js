@@ -249,9 +249,10 @@ function genIsApplied(){const m=(data.groupMeta||{})[activeClass()?.id];return !
 function genApplySet(set,key,title){
   const cls=activeClass();if(!cls||!set?.groups?.length)return false;
   const pts=classGroups().reduce((a,x)=>a+(x.points||0),0);
-  if(pts>0&&!confirm(`Replace the current teams for ${cls.name}?\nTheir ${pts} point${pts>1?"s":""} will be reset to zero.`))return false;
+  if(pts>0&&!confirm(`Replace the current teams for ${cls.name}?\nTheir ${pts} point${pts>1?"s":""} and rubric scores will be reset to zero.`))return false;
   ensureGroupData();
   data.classGroups[cls.id]=set.groups.map((x,i)=>({id:i+1,name:x.name,points:0,leader:x.leader||null}));
+  data.groupScores=(data.groupScores||[]).filter(x=>x.classId!==cls.id);
   cls.students.forEach(s=>{s.group=null;});
   set.groups.forEach((x,i)=>x.members.forEach(m=>{const s=cls.students.find(y=>y.id===m.id);if(s)s.group=i+1;}));
   data.groupMeta[cls.id]={key,title,at:new Date().toISOString()};
