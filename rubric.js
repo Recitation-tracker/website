@@ -47,7 +47,7 @@ $("rbSave").onclick=()=>{
   const r=picked();if(!r.every(Boolean))return;
   const g=classGroups().find(x=>x.id===gid);if(!g)return;
   const total=r.reduce((a,b)=>a+b,0);
-  (data.groupScores=data.groupScores||[]).push({id:uid(),classId:activeClass().id,groupId:gid,activity:$("rbActivity").value.trim(),date:todayISO(),ratings:r,total});
+  (data.groupScores=data.groupScores||[]).push({id:uid(),classId:activeClass().id,groupId:gid,activity:$("rbActivity").value.trim(),date:todayISO(),ratings:r,total,members:activeClass().students.filter(s=>+s.group===gid).map(s=>s.id)});
   g.points+=total;save();renderGroups();renderDashboard();dlg.close();
   toast(`${g.name}: ${total}/25 · ${gaLevel(total)}`);
 };
