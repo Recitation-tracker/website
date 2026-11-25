@@ -178,3 +178,10 @@ table.att-grid{width:auto;border-collapse:separate;border-spacing:0;white-space:
 .icon-button .dl-icon{display:block;margin:auto}
 
 .brand-mark{width:42px;height:42px;border-radius:12px;background:#fff;padding:3px;box-shadow:0 2px 8px rgba(0,0,0,.18)}.brand-mark img{width:100%;height:100%;object-fit:contain;display:block}
+
+/* Student import */
+.intro-actions{display:flex;gap:10px;flex-wrap:wrap}
+.imp-list{list-style:none;margin:0 0 6px;padding:10px 14px;border:1px solid #e2e8f2;border-radius:8px;background:#fafcff;font-size:11px;line-height:1.9;color:#2c3e5c;max-height:170px;overflow-y:auto}
+.imp-list .muted{color:#8a98b0}
+#importDialog .modal-actions{flex-wrap:wrap}
+@media(max-width:560px){.intro-actions{width:100%}.intro-actions .btn{flex:1}}

@@ -178,7 +178,7 @@
       </section>
 
       <section class="view" id="view-students">
-        <div class="section-intro"><div><h2>Student Records</h2><p>Search learners and review their participation history.</p></div><button class="btn btn-primary" id="addStudentBtn">＋ Add Student</button></div>
+        <div class="section-intro"><div><h2>Student Records</h2><p>Search learners and review their participation history.</p></div><div class="intro-actions"><button class="btn btn-outline" id="importStudentsBtn">⬆ Import from Excel</button><button class="btn btn-primary" id="addStudentBtn">＋ Add Student</button></div></div>
         <div class="toolbar"><select id="studentsClassSelect" class="select-control"></select><input id="studentSearch" class="input-control search-input" placeholder="Search student name..."></div>
         <div class="panel table-wrap"><table><thead><tr><th>Student</th><th>Group</th><th>Recitations</th><th>Average</th><th>Action</th></tr></thead><tbody id="studentsBody"></tbody></table></div>
       </section>
@@ -222,6 +222,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <dialog id="simpleDialog" class="modal"><form method="dialog"><div class="modal-heading"><h3 id="dialogTitle">Add item</h3><button class="icon-button" value="cancel" aria-label="Close">×</button></div><div id="dialogBody"></div><div class="modal-actions"><button class="btn btn-outline" value="cancel">Cancel</button><button class="btn btn-primary" id="dialogSave" value="default">Save</button></div></form></dialog>
   <script src="app.js"></script>
+  <script src="import.js"></script>
   <script src="generator.js"></script>
   <script src="recitation.js"></script>
   <script src="sounds.js"></script>
