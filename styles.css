@@ -211,3 +211,16 @@ table.att-grid{width:auto;border-collapse:separate;border-spacing:0;white-space:
 .rb-hist li{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid #edf1f7}.rb-hist li span{flex:1;color:#596c8d}
 .rb-del{border:0;background:#fdecec;color:#a02727;border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:14px;line-height:1}
 @media(max-width:520px){.rb-scale{gap:5px}}
+
+/* Group Activity record (Reports) */
+.ga-panel{margin-top:18px}.ga-hint{margin:0 0 10px;font-size:11px}
+.ga-simple{min-width:560px}.ga-simple td:first-child,.ga-simple th:first-child{white-space:nowrap}
+.ga-simple tr.ga-sum td{background:#eef3fb;font-weight:700}
+.ga-panel .att-wrap{overflow-x:auto}
+@media print{
+  body.print-rec .ga-panel{display:none!important}
+  body.print-ga #view-reports>*:not(.ga-panel){display:none!important}
+  body.print-ga .ga-panel .toolbar,body.print-ga .ga-panel .panel-heading .inline-actions,body.print-ga .ga-panel .att-legend{display:none!important}
+  body.print-ga .ga-panel .att-wrap{max-height:none!important;overflow:visible!important}
+}
+.att-legend[hidden]{display:none}
